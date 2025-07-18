@@ -1,41 +1,38 @@
+# -------- Build Stage --------
+FROM openjdk:21-jdk-slim AS builder
 
-FROM openjdk:23-jdk-slim AS builder
+# Install Maven and basic tools
+RUN apt-get update && \
+    apt-get install -y maven curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Maven
-RUN apt-get update && apt-get install -y maven && apt-get install -y curl
-
-# Set the working directory in the container
+# Set working directory
 WORKDIR /app
 
-# Copy the Maven project file
+# Copy the Maven project descriptor
 COPY pom.xml .
 
-# Download dependencies (this step is caching the dependencies layer)
+# Pre-download dependencies for better caching
 RUN mvn dependency:go-offline -B
 
-# Copy the rest of the application source code
+# Copy the rest of the project
 COPY src ./src
 
-# Build the application (the JAR file will be generated in the target folder)
+# Package the application (skip tests)
 RUN mvn clean package -DskipTests
 
-# Use the official openjdk image for running the application
-FROM openjdk:17-jdk-slim
+# -------- Runtime Stage --------
+FROM openjdk:21-jdk-slim
 
-# Set the working directory in the container
+# Set working directory
 WORKDIR /app
 
-# Copy the JAR file from the build stage into the container
+# Copy the compiled JAR from the builder stage
 COPY --from=builder /app/target/hotlistmicroservice-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose the port the app runs on
+# Expose application port
 EXPOSE 8092
 
-# Run the JAR file
+# Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]
-
-
-
-
-
-
