@@ -1,5 +1,6 @@
 package com.adroit.hotlistmicroservice.exception;
 
+import com.adroit.hotlistmicroservice.dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,40 +17,18 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(InvalidFileTypeException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidFileTypeException(InvalidFileTypeException ex) {
-        ErrorResponse.ErrorDto error=new ErrorResponse.ErrorDto(400, ex.getMessage());
-        ErrorResponse response = new ErrorResponse(
-                false,
-                "Invalid File Type",
-                null,
-                error
-        );
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
 
-        ErrorResponse.ErrorDto error=new ErrorResponse.ErrorDto(413,ex.getMessage());
-        ErrorResponse errorResponse = new ErrorResponse(
-                false,
-                "File size exceeds the maximum allowed size of 10 MB.",
-                null,
-                error
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.PAYLOAD_TOO_LARGE);  // Return 413 Payload Too Large
-    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex){
 
-        ErrorResponse.ErrorDto error=new ErrorResponse.ErrorDto(500,ex.getMessage());
+        ErrorDto error=new ErrorDto(500,ex.getMessage());
         ErrorResponse response=new ErrorResponse(false,"Exception",null,error);
         return new ResponseEntity<>(response,HttpStatus.INTERNAL_SERVER_ERROR);
     }
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<ErrorResponse> handleMultipartException(MultipartException ex) {
 
-        ErrorResponse.ErrorDto error=new ErrorResponse.ErrorDto(413,ex.getMessage());
+        ErrorDto error=new ErrorDto(413,ex.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(
                 false,
                 "Multipart File Exception",
@@ -61,7 +40,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConsultantAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleConsultantAlreadyExistsException(ConsultantAlreadyExistsException e){
 
-        ErrorResponse.ErrorDto error=new ErrorResponse.ErrorDto(409,e.getMessage());
+        ErrorDto error=new ErrorDto(409,e.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(
                 false,
                 "Consultant already exists. Please check the details.",
@@ -70,16 +49,51 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse,HttpStatus.CONFLICT);
     }
-    @ExceptionHandler(ConsultantNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleConsultantNotFoundException(ConsultantNotFoundException e){
 
-        ErrorResponse.ErrorDto error=new ErrorResponse.ErrorDto(404,e.getMessage());
-        ErrorResponse errorResponse=new ErrorResponse(
+    @ExceptionHandler(InvalidFileTypeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFileType(InvalidFileTypeException ex) {
+       ErrorDto error = new ErrorDto(
+                400,
+                "Allowed formats: PDF (.pdf), Word (.docx, .doc). " + ex.getMessage()
+        );
+
+        ErrorResponse response = new ErrorResponse(
                 false,
-                "Consultant Not Exists",
+                "Invalid file type",
                 new ArrayList<>(),
                 error
         );
-        return new ResponseEntity<>(errorResponse,HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // Handle oversized files
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxSizeExceeded(MaxUploadSizeExceededException ex) {
+        ErrorDto error = new ErrorDto(
+                413,
+                "Max file size is 10MB. " + ex.getMessage()
+        );
+
+        ErrorResponse response = new ErrorResponse(
+                false,
+                "File too large",
+                new ArrayList<>(),
+                error
+        );
+        return new ResponseEntity<>(response, HttpStatus.PAYLOAD_TOO_LARGE);
+    }
+    @ExceptionHandler(DocumentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDocumentNotFoundException(DocumentNotFoundException e){
+        ErrorDto error = new ErrorDto(
+                404,
+                  e.getMessage()
+        );
+        ErrorResponse response = new ErrorResponse(
+                false,
+                "No Documents Available",
+                new ArrayList<>(),
+                error
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 }

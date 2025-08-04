@@ -1,17 +1,10 @@
-package com.adroit.hotlistmicroservice.model;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
+package com.adroit.hotlistmicroservice.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-public class HotList {
+public class ConsultantDto {
 
-    @Id
     private String consultantId;
     private String name;
     private String emailId;
@@ -26,15 +19,6 @@ public class HotList {
     private String salesExecutive;
     private String remoteOnsite;
     private String technology;
-//    @Lob
-//    @Column(name="marketingVisa",columnDefinition = "LONGBLOB")
-//    private byte[] marketingVisa;
-//    @Lob
-//    @Column(name = "actualVisa", columnDefinition = "LONGBLOB")
-//    private byte[] actualVisa;
-
-    private String marketingVisa;
-    private String actualVisa;
     private String experience;
     private String location;
     private LocalDate originalDOB;
@@ -47,30 +31,23 @@ public class HotList {
     private String remarks;
     private LocalDateTime consultantAddedTimeStamp;
     private LocalDateTime updatedTimeStamp;
+    private String marketingVisa;
+    private String actualVisa;
 
-
-    public LocalDateTime getConsultantAddedTimeStamp() {
-        return consultantAddedTimeStamp;
+    public String getMarketingVisa() {
+        return marketingVisa;
     }
 
-    public void setConsultantAddedTimeStamp(LocalDateTime consultantAddedTimeStamp) {
-        this.consultantAddedTimeStamp = consultantAddedTimeStamp;
+    public void setMarketingVisa(String marketingVisa) {
+        this.marketingVisa = marketingVisa;
     }
 
-    public LocalDateTime getUpdatedTimeStamp() {
-        return updatedTimeStamp;
+    public String getActualVisa() {
+        return actualVisa;
     }
 
-    public void setUpdatedTimeStamp(LocalDateTime updatedTimeStamp) {
-        this.updatedTimeStamp = updatedTimeStamp;
-    }
-
-    public String getConsultantId() {
-        return consultantId;
-    }
-
-    public void setConsultantId(String consultantId) {
-        this.consultantId = consultantId;
+    public void setActualVisa(String actualVisa) {
+        this.actualVisa = actualVisa;
     }
 
     public String getName() {
@@ -177,22 +154,6 @@ public class HotList {
         this.technology = technology;
     }
 
-    public String getMarketingVisa() {
-        return marketingVisa;
-    }
-
-    public void setMarketingVisa(String marketingVisa) {
-        this.marketingVisa = marketingVisa;
-    }
-
-    public String getActualVisa() {
-        return actualVisa;
-    }
-
-    public void setActualVisa(String actualVisa) {
-        this.actualVisa = actualVisa;
-    }
-
     public String getExperience() {
         return experience;
     }
@@ -271,5 +232,29 @@ public class HotList {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public LocalDateTime getConsultantAddedTimeStamp() {
+        return consultantAddedTimeStamp;
+    }
+
+    public void setConsultantAddedTimeStamp(LocalDateTime consultantAddedTimeStamp) {
+        this.consultantAddedTimeStamp = consultantAddedTimeStamp;
+    }
+
+    public LocalDateTime getUpdatedTimeStamp() {
+        return updatedTimeStamp;
+    }
+
+    public void setUpdatedTimeStamp(LocalDateTime updatedTimeStamp) {
+        this.updatedTimeStamp = updatedTimeStamp;
+    }
+
+    public String getConsultantId() {
+        return consultantId;
+    }
+
+    public void setConsultantId(String consultantId) {
+        this.consultantId = consultantId;
     }
 }

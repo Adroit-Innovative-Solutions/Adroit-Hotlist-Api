@@ -1,6 +1,6 @@
 package com.adroit.hotlistmicroservice.repo;
 
-import com.adroit.hotlistmicroservice.model.HotList;
+import com.adroit.hotlistmicroservice.model.Consultant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,17 +8,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
 
-public interface HotListRepo extends JpaRepository<HotList,String> {
+public interface ConsultantRepo extends JpaRepository<Consultant,String> {
 
 
-    @Query("SELECT MAX(consultantId) FROM HotList WHERE consultantId LIKE 'CONS%'")
+    @Query("SELECT MAX(consultantId) FROM Consultant WHERE consultantId LIKE 'CONS%'")
     String findMaxConsultantId();
 
-    List<HotList> findByEmailIdAndPersonalContact(String emailId, String personalContact);
+    List<Consultant> findByEmailIdAndPersonalContact(String emailId, String personalContact);
 
-    Page<HotList> findAll(Pageable pageable);
+    Page<Consultant> findAll(Pageable pageable);
 
-    @Query("SELECT h FROM HotList h WHERE " +
+    @Query("SELECT h FROM Consultant h WHERE " +
             "LOWER(h.consultantId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.emailId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -45,7 +45,7 @@ public interface HotListRepo extends JpaRepository<HotList,String> {
             "LOWER(CAST(h.editedDOB AS string)) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(CAST(h.marketingStartDate AS string)) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.remarks) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    Page<HotList> searchHotlist(
+    Page<Consultant> searchHotlist(
             @Param("keyword") String keyword,
             Pageable pageable);
 

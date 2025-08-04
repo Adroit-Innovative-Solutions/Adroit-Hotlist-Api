@@ -1,38 +1,33 @@
 # -------- Build Stage --------
 FROM openjdk:21-jdk-slim AS builder
 
-# Install Maven and basic tools
 RUN apt-get update && \
     apt-get install -y maven curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy the Maven project descriptor
 COPY pom.xml .
-
-# Pre-download dependencies for better caching
 RUN mvn dependency:go-offline -B
 
-# Copy the rest of the project
 COPY src ./src
-
-# Package the application (skip tests)
 RUN mvn clean package -DskipTests
 
 # -------- Runtime Stage --------
 FROM openjdk:21-jdk-slim
 
-# Set working directory
 WORKDIR /app
 
-# Copy the compiled JAR from the builder stage
+# Accept environment profile and port
+ARG SPRING_PROFILES_ACTIVE=prod
+ARG PORT=8092
+
+ENV SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE
+ENV PORT=$PORT
+
 COPY --from=builder /app/target/hotlistmicroservice-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose application port
-EXPOSE 8092
+EXPOSE $PORT
 
-# Run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Dserver.port=$PORT -jar app.jar"]

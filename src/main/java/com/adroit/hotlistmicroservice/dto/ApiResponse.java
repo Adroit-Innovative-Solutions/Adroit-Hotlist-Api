@@ -1,5 +1,6 @@
 package com.adroit.hotlistmicroservice.dto;
 
+import com.adroit.hotlistmicroservice.exception.ErrorDto;
 import com.adroit.hotlistmicroservice.exception.ErrorResponse;
 
 public class ApiResponse<T> {
@@ -7,12 +8,12 @@ public class ApiResponse<T> {
     private boolean success;
     private String message;
     private T data;
-    private ErrorResponse.ErrorDto error;
+    private ErrorDto error;
 
     public ApiResponse() {
     }
 
-    public ApiResponse(boolean success, String message, T data, ErrorResponse.ErrorDto error) {
+    public ApiResponse(boolean success, String message, T data, ErrorDto error) {
         this.success = success;
         this.message = message;
         this.data = data;
@@ -44,11 +45,11 @@ public class ApiResponse<T> {
         this.data = data;
     }
 
-    public ErrorResponse.ErrorDto getError() {
+    public ErrorDto getError() {
         return error;
     }
 
-    public void setError(ErrorResponse.ErrorDto error) {
+    public void setError(ErrorDto error) {
         this.error = error;
     }
 }
