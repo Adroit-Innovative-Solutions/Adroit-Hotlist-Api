@@ -25,12 +25,12 @@ COPY nginx/ssl/mymulya.crt /etc/ssl/certs/custom/mymulya.crt
 
 # Import certificate into Java truststore if exists
 RUN if [ -f /etc/ssl/certs/custom/mymulya.crt ]; then \
-      keytool -importcert -trustcacerts -alias mymulya_cert \
+      keytool -import -trustcacerts -alias mymulya_cert \
         -file /etc/ssl/certs/custom/mymulya.crt \
-        -cacerts \
+        -keystore $JAVA_HOME/lib/security/cacerts \
         -storepass changeit -noprompt; \
     else \
-      echo "No certificate file found, skipping import"; \
+      echo "Certificate file not found, skipping import"; \
     fi
 
 ARG SPRING_PROFILES_ACTIVE=dev
