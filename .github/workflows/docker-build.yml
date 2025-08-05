@@ -25,12 +25,13 @@ jobs:
             echo "IMAGE_NAME=dataquad123/adroit-prod-hotlist" >> $GITHUB_ENV
           fi
 
-      # Conditionally create SSL cert file only for production builds
+      # Conditionally create SSL certificate files from base64 secrets for PROD
       - name: Setup SSL certificate for PROD
         if: env.ENV_SUFFIX == 'prod'
         run: |
           mkdir -p nginx/ssl
-          echo "${{ secrets.MYSSL_CERT }}" > nginx/ssl/mymulya.crt
+          echo "${{ secrets.MYMULYA_CRT_BASE64 }}" | base64 -d > nginx/ssl/mymulya.crt
+          echo "${{ secrets.MYMULYA_CHAIN_CRT_BASE64 }}" | base64 -d > nginx/ssl/mymulya-chain.crt
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
