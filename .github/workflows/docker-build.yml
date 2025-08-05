@@ -64,10 +64,14 @@ jobs:
             --build-arg PORT=$PORT \
             -t $IMAGE_NAME:$ENV_SUFFIX-$IMAGE_TAG .
 
+          # Tag as env-latest and latest
           docker tag $IMAGE_NAME:$ENV_SUFFIX-$IMAGE_TAG $IMAGE_NAME:$ENV_SUFFIX-latest
+          docker tag $IMAGE_NAME:$ENV_SUFFIX-$IMAGE_TAG $IMAGE_NAME:latest
 
+          # Push all tags
           docker push $IMAGE_NAME:$ENV_SUFFIX-$IMAGE_TAG
           docker push $IMAGE_NAME:$ENV_SUFFIX-latest
+          docker push $IMAGE_NAME:latest
 
       - name: Delete Old Images (Keep Last 10)
         run: |
