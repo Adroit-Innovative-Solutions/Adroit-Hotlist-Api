@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://192.168.0.139:3000")
+// @CrossOrigin(origins = "http://192.168.0.139:3000")
 @Slf4j
 @RestController
 @RequestMapping("/hotlist")
