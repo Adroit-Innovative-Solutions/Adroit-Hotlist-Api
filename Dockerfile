@@ -19,29 +19,26 @@ FROM openjdk:21-jdk-slim
 
 WORKDIR /app
 
-# Install certificate tools for importing certs
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates && mkdir -p /etc/ssl/certs/custom
 
-# Create directory to store custom SSL certs
-RUN mkdir -p /etc/ssl/certs/custom
-
-# Copy your SSL certificate into the container
 COPY nginx/ssl/mymulya.crt /etc/ssl/certs/custom/mymulya.crt
 
-# Import the certificate into Java truststore (cacerts)
-RUN keytool -import -trustcacerts -alias mymulya_cert \
-    -file /etc/ssl/certs/custom/mymulya.crt \
-    -keystore $JAVA_HOME/lib/security/cacerts \
-    -storepass changeit -noprompt
+# Import certificate into Java truststore if exists
+RUN if [ -f /etc/ssl/certs/custom/mymulya.crt ]; then \
+      keytool -importcert -trustcacerts -alias mymulya_cert \
+        -file /etc/ssl/certs/custom/mymulya.crt \
+        -cacerts \
+        -storepass changeit -noprompt; \
+    else \
+      echo "No certificate file found, skipping import"; \
+    fi
 
-# Accept environment profile and port as build args
-ARG SPRING_PROFILES_ACTIVE=prod
-ARG PORT=8092
+ARG SPRING_PROFILES_ACTIVE=dev
+ARG PORT=8091
 
 ENV SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE
 ENV PORT=$PORT
 
-# Copy built jar from builder stage
 COPY --from=builder /app/target/hotlistmicroservice-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE $PORT
