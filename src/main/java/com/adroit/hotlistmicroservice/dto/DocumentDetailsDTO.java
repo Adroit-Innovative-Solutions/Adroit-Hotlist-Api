@@ -2,6 +2,8 @@ package com.adroit.hotlistmicroservice.dto;
 
 import com.adroit.hotlistmicroservice.model.Consultant;
 
+import java.time.LocalDateTime;
+
 public class DocumentDetailsDTO {
 
     private long documentId;
@@ -9,6 +11,18 @@ public class DocumentDetailsDTO {
     private String fileName;
 
     private String documentType;
+
+    private LocalDateTime createdAt;
+
+
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
 
     public String getFileName() {
