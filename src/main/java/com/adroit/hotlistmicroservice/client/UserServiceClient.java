@@ -5,7 +5,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
-@FeignClient(name="user",url = "${user.microservice.url}")
+@FeignClient(name="user",
+        url = "${user.microservice.url}",
+        configuration = FeignClientConfiguration.class)
 public interface UserServiceClient {
 
     @GetMapping("/users/employee")

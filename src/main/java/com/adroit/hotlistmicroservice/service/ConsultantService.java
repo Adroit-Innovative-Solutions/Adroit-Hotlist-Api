@@ -61,26 +61,30 @@ public class ConsultantService {
 
         Tika tika=new Tika();
         // Saving Resume as BLOB
-        if(!resumes.isEmpty()) {
-            for (MultipartFile resume : resumes) {
-                if (!resume.isEmpty()) {
-                    FileValidator.validateStrictFile(resume);
-                    String mimeType = FileValidator.mapFileNameToFileType(resume.getOriginalFilename());
-                    logger.info("Resume File Mime Type {}", tika.detect(resume.getInputStream()));
-                    ConsultantDocument doc = saveDocument(resume, "RESUME", mimeType, consultant);
-                    consultant.getDocuments().add(doc);
+        if(resumes!=null) {
+            if (!resumes.isEmpty()) {
+                for (MultipartFile resume : resumes) {
+                    if (!resume.isEmpty()) {
+                        FileValidator.validateStrictFile(resume);
+                        String mimeType = FileValidator.mapFileNameToFileType(resume.getOriginalFilename());
+                        logger.info("Resume File Mime Type {}", tika.detect(resume.getInputStream()));
+                        ConsultantDocument doc = saveDocument(resume, "RESUME", mimeType, consultant);
+                        consultant.getDocuments().add(doc);
+                    }
                 }
             }
         }
-        if(!documents.isEmpty()) {
-            // Saving Documents as BLOB
-            for (MultipartFile document : documents) {
-                if (!document.isEmpty()) {
-                    FileValidator.validateStrictFile(document);
-                    String mimeType = FileValidator.mapFileNameToFileType(document.getOriginalFilename());
-                    logger.info("Document MimeType : {}", tika.detect(document.getInputStream()));
-                    ConsultantDocument doc = saveDocument(document, "DOCUMENT", mimeType, consultant);
-                    consultant.getDocuments().add(doc);
+        if(documents!=null) {
+            if (!documents.isEmpty()) {
+                // Saving Documents as BLOB
+                for (MultipartFile document : documents) {
+                    if (!document.isEmpty()) {
+                        FileValidator.validateStrictFile(document);
+                        String mimeType = FileValidator.mapFileNameToFileType(document.getOriginalFilename());
+                        logger.info("Document MimeType : {}", tika.detect(document.getInputStream()));
+                        ConsultantDocument doc = saveDocument(document, "DOCUMENT", mimeType, consultant);
+                        consultant.getDocuments().add(doc);
+                    }
                 }
             }
         }
@@ -104,6 +108,7 @@ public class ConsultantService {
         consultantDocument.setFileData(file.getBytes());
         consultantDocument.setDocumentType(DocumentType);
         consultantDocument.setFileType(fileType);
+        consultantDocument.setCreatedAt(LocalDateTime.now());
 
         return consultantDocumentRepo.save(consultantDocument);
     }

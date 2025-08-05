@@ -63,6 +63,7 @@ public class ConsultantDocumentService {
         documentDetailsDTO.setDocumentId(consultantDocument.getDocumentId());
         documentDetailsDTO.setFileName(consultantDocument.getFileName());
         documentDetailsDTO.setDocumentType(consultantDocument.getDocumentType());
+        documentDetailsDTO.setCreatedAt(consultantDocument.getCreatedAt());
 
         return documentDetailsDTO;
     }

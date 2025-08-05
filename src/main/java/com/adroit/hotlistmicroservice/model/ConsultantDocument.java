@@ -3,6 +3,8 @@ package com.adroit.hotlistmicroservice.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class ConsultantDocument {
 
@@ -24,6 +26,17 @@ public class ConsultantDocument {
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     private Consultant consultant;
+
+    private LocalDateTime createdAt;
+
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public String getFileType() {
         return fileType;
