@@ -134,7 +134,8 @@ public class ConsultantController {
     }
 
     @GetMapping("/getUsers")
-    public List<String> getUserNames() {
+    public List<EmployeeWithRole> getUserNames() {
+
 
         return userServiceClient.getUserNames();
     }
