@@ -96,4 +96,27 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException e){
+        ErrorDto error=new ErrorDto(404,e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                false,
+                "User not Found Exception",
+                new ArrayList(),
+                error
+        );
+        return new ResponseEntity<>(errorResponse,HttpStatus.CONFLICT);
+    }
+    @ExceptionHandler(FeignClientException.class)
+    public ResponseEntity<ErrorResponse> handleFeignClientException(FeignClientException e){
+
+        ErrorDto error=new ErrorDto(404,e.getErrorMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                false,
+                e.getMessage(),
+                new ArrayList(),
+                error
+        );
+        return new ResponseEntity<>(errorResponse,HttpStatus.CONFLICT);
+    }
 }

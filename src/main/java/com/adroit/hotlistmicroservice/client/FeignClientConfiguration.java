@@ -2,6 +2,7 @@ package com.adroit.hotlistmicroservice.client;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 public class FeignClientConfiguration {
 
 
-    @Bean
+   /* @Bean
     public RequestInterceptor feignRequestInterceptor(){
       return new RequestInterceptor() {
           @Override
@@ -30,5 +31,10 @@ public class FeignClientConfiguration {
           }
       };
 
+    }  */
+
+    @Bean
+    public ErrorDecoder errorDecoder(){
+        return new CustomErrorDecoder();
     }
 }
