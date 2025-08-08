@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.List;
 
 @CrossOrigin(origins = {"http://35.188.150.92", "http://192.168.0.140:3000", "http://192.168.0.139:3000","https://mymulya.com","http://localhost:3000","http://192.168.0.135:8080","http://192.168.0.135",
-        "http://182.18.177.16"})
+        "http://182.18.177.16","http://192.168.1.151:3000"})
 @RestController
 @RequestMapping("/hotlist")
 public class ConsultantController {
@@ -117,7 +117,7 @@ public class ConsultantController {
     }
 
     @GetMapping("/search/{keyword}")
-    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> search(
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> search(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @PathVariable String keyword
@@ -125,19 +125,57 @@ public class ConsultantController {
          Pageable pageable=PageRequest.of(page,
                  size,
                  Sort.Direction.DESC,"updatedTimeStamp");
-
         Page<ConsultantDto> response= consultantService.search(pageable,keyword);
-
-        ApiResponse<Page<ConsultantDto>> apiResponse=new ApiResponse<>(true,"Data Fetched",response,null);
-
+        PageResponse<ConsultantDto> pageResponse=new PageResponse<>(response);
+        ApiResponse<PageResponse<ConsultantDto>> apiResponse=new ApiResponse<>(true,"Data Fetched",pageResponse,null);
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
-
-    @GetMapping("/getUsers")
-    public List<EmployeeWithRole> getUserNames() {
-
-
-        return userServiceClient.getUserNames();
+//    @GetMapping("/getEmployees/{role}")
+//    public ResponseEntity<EmployeeDropDownDto> getEmployeesByRole(
+//            @PathVariable String role
+//    ){
+//        consultantService.getEmployeeDetailsByRole(role);
+//    }
+    @GetMapping("/consultantsByUserId/{userId}")
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> consultantsByUserId(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @PathVariable String userId
+    ){
+        Pageable pageable=PageRequest.of(
+                page,
+                size,
+                Sort.Direction.DESC,"updatedTimeStamp");
+       Page<ConsultantDto> response=consultantService.getConsultantsByUserId(pageable,userId);
+        PageResponse<ConsultantDto> pageResponse=new PageResponse<>(response);
+       ApiResponse<PageResponse<ConsultantDto>> apiResponse=new ApiResponse<>(true,"Consultant Data Fetched",pageResponse,null);
+       return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
+    @GetMapping("/getUsers/{role}")
+    public List<EmployeeDropDownDto> getUserNames(
+            @PathVariable String role
+    ) {
+        return consultantService.getEmployeeDetailsByRole(role);
+    }
+    @GetMapping("/getTeamConsultants/{userId}")
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getTeamConsultants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @PathVariable String userId
+    ){
+        Pageable pageable=PageRequest.of(
+                page,
+                size,
+                Sort.Direction.DESC,"updatedTimeStamp");
 
+       Page<ConsultantDto> response=consultantService.getTeamConsultants(pageable,userId);
+        PageResponse<ConsultantDto> pageResponse=new PageResponse<>(response);
+       ApiResponse<PageResponse<ConsultantDto>> apiResponse=new ApiResponse<>(true,"HotList Data Fetched",pageResponse,null);
+       return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<UserDto>> getUserByUserId(@PathVariable String userId){
+
+        return userServiceClient.getUserByUserID(userId);
+    }
 }

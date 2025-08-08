@@ -26,8 +26,8 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String> {
             "LOWER(h.marketingContact) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.personalContact) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.reference) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(h.recruiter) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(h.teamLead) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(h.recruiterId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(h.teamLeadId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.status) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.passport) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(h.salesExecutive) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -49,4 +49,7 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String> {
             @Param("keyword") String keyword,
             Pageable pageable);
 
+    Page<Consultant> findByRecruiterId(Pageable pageable,String userId);
+
+    Page<Consultant> findByTeamLeadId(Pageable pageable, String userId);
 }

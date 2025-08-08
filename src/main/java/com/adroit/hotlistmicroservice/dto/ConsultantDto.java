@@ -12,8 +12,10 @@ public class ConsultantDto {
     private String marketingContact;
     private String personalContact;
     private String reference;
-    private String recruiter;
-    private String teamLead;
+    private String recruiterId;
+    private String teamleadId;
+    private String recruiterName;
+    private String teamleadName;
     private String status;
     private String passport;
     private String salesExecutive;
@@ -98,20 +100,20 @@ public class ConsultantDto {
         this.reference = reference;
     }
 
-    public String getRecruiter() {
-        return recruiter;
+    public String getRecruiterId() {
+        return recruiterId;
     }
 
-    public void setRecruiter(String recruiter) {
-        this.recruiter = recruiter;
+    public void setRecruiterId(String recruiterId) {
+        this.recruiterId = recruiterId;
     }
 
-    public String getTeamLead() {
-        return teamLead;
+    public String getTeamleadId() {
+        return teamleadId;
     }
 
-    public void setTeamLead(String teamLead) {
-        this.teamLead = teamLead;
+    public void setTeamleadId(String teamleadId) {
+        this.teamleadId = teamleadId;
     }
 
     public String getStatus() {
@@ -256,5 +258,21 @@ public class ConsultantDto {
 
     public void setConsultantId(String consultantId) {
         this.consultantId = consultantId;
+    }
+
+    public String getRecruiterName() {
+        return recruiterName;
+    }
+
+    public void setRecruiterName(String recruiterName) {
+        this.recruiterName = recruiterName;
+    }
+
+    public String getTeamleadName() {
+        return teamleadName;
+    }
+
+    public void setTeamleadName(String teamleadName) {
+        this.teamleadName = teamleadName;
     }
 }

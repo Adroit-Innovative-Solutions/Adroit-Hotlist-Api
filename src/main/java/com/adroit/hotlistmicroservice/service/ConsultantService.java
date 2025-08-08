@@ -1,28 +1,33 @@
 package com.adroit.hotlistmicroservice.service;
 
 import com.adroit.hotlistmicroservice.client.UserServiceClient;
-import com.adroit.hotlistmicroservice.dto.ConsultantAddedResponse;
-import com.adroit.hotlistmicroservice.dto.ConsultantDto;
-import com.adroit.hotlistmicroservice.dto.DeleteConsultantResponse;
+import com.adroit.hotlistmicroservice.dto.*;
 import com.adroit.hotlistmicroservice.exception.ConsultantAlreadyExistsException;
 import com.adroit.hotlistmicroservice.exception.ConsultantNotFoundException;
+import com.adroit.hotlistmicroservice.exception.UserNotFoundException;
 import com.adroit.hotlistmicroservice.filevalidator.FileValidator;
 import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.model.ConsultantDocument;
 import com.adroit.hotlistmicroservice.repo.ConsultantDocumentRepo;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
+import org.apache.catalina.User;
+import org.apache.commons.io.output.ClosedOutputStream;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.net.UnknownServiceException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ConsultantService {
@@ -37,21 +42,27 @@ public class ConsultantService {
     public static final Logger logger= LoggerFactory.getLogger(ConsultantService.class);
 
     public String generateConsultantId(){
-
         String maxConsultantId= consultantRepo.findMaxConsultantId();
         int nextNum=1;
         if(maxConsultantId!=null && maxConsultantId.startsWith("CONS")){
             nextNum=Integer.parseInt(maxConsultantId.substring(4))+1;
         }
         return String.format("CONS%05d",nextNum);
-
     }
-
     public ConsultantAddedResponse addConsultant(ConsultantDto dto, List<MultipartFile> resumes, List<MultipartFile> documents) throws IOException {
+        logger.info("Creating new consultant {}",dto.getName());
+        if(dto.getRecruiterId()!=null){
+            dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
+        }
+        if (dto.getTeamleadId()!=null){
+            dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamleadId()).getBody().getData().getUserName());
+        }
         Consultant consultant = convertDtoToEntity(dto);
         List<Consultant> existedHotList=consultantRepo.findByEmailIdAndPersonalContact(consultant.getEmailId(),consultant.getPersonalContact());
-        if(!existedHotList.isEmpty()) throw new ConsultantAlreadyExistsException("A consultant with the same email and personal contact already exists in the system.");
-
+        if(!existedHotList.isEmpty()){
+            logger.warn("A consultant with the same email and personal contact already exists in the system");
+            throw new ConsultantAlreadyExistsException("A consultant with the same email and personal contact already exists in the system.");
+        }
         consultant.setConsultantId(generateConsultantId());
         consultant.setConsultantAddedTimeStamp(LocalDateTime.now());
         consultant.setUpdatedTimeStamp(LocalDateTime.now());
@@ -64,7 +75,8 @@ public class ConsultantService {
         if(resumes!=null) {
             if (!resumes.isEmpty()) {
                 for (MultipartFile resume : resumes) {
-                    if (!resume.isEmpty()) {
+                    if (!resume.isEmpty())
+                    {
                         FileValidator.validateStrictFile(resume);
                         String mimeType = FileValidator.mapFileNameToFileType(resume.getOriginalFilename());
                         logger.info("Resume File Mime Type {}", tika.detect(resume.getInputStream()));
@@ -89,27 +101,28 @@ public class ConsultantService {
             }
         }
         // Save again to update with documents
-        consultantRepo.save(consultant);
-
+        Consultant savedConsultant=consultantRepo.save(consultant);
+        logger.info("Consultant Created Successfully {}",savedConsultant.getConsultantId());
         ConsultantAddedResponse response = new ConsultantAddedResponse();
         response.setConsultantId(consultant.getConsultantId());
         response.setName(consultant.getName());
-        response.setRecruiter(consultant.getRecruiter());
+        response.setRecruiter(consultant.getRecruiterId());
         response.setAddedTimeStamp(consultant.getConsultantAddedTimeStamp());
 
         return response;
     }
-    public ConsultantDocument saveDocument(MultipartFile file,String DocumentType,String fileType,Consultant consultant)
+    public ConsultantDocument saveDocument(MultipartFile file,String documentType,String fileType,Consultant consultant)
             throws IOException {
 
+        logger.info("saving the {} type File In DataBase ",documentType);
         ConsultantDocument consultantDocument=new ConsultantDocument();
         consultantDocument.setConsultant(consultant);
         consultantDocument.setFileName(file.getOriginalFilename());
         consultantDocument.setFileData(file.getBytes());
-        consultantDocument.setDocumentType(DocumentType);
+        consultantDocument.setDocumentType(documentType);
         consultantDocument.setFileType(fileType);
         consultantDocument.setCreatedAt(LocalDateTime.now());
-
+        logger.info("saved the {} type File In DataBase ",documentType);
         return consultantDocumentRepo.save(consultantDocument);
     }
     public static Consultant  convertDtoToEntity(ConsultantDto dto) {
@@ -121,8 +134,8 @@ public class ConsultantService {
         entity.setMarketingContact(dto.getMarketingContact());
         entity.setPersonalContact(dto.getPersonalContact());
         entity.setReference(dto.getReference());
-        entity.setRecruiter(dto.getRecruiter());
-        entity.setTeamLead(dto.getTeamLead());
+        entity.setRecruiterId(dto.getRecruiterId());
+        entity.setTeamLeadId(dto.getTeamleadId());
         entity.setStatus(dto.getStatus());
         entity.setPassport(dto.getPassport());
         entity.setSalesExecutive(dto.getSalesExecutive());
@@ -140,7 +153,8 @@ public class ConsultantService {
         entity.setRemarks(dto.getRemarks());
         entity.setMarketingVisa(dto.getMarketingVisa());
         entity.setActualVisa(dto.getActualVisa());
-
+        entity.setRecruiterName(dto.getRecruiterName());
+        entity.setTeamleadName(dto.getTeamleadName());
         return entity;
     }
 
@@ -154,8 +168,8 @@ public class ConsultantService {
         dto.setMarketingContact(entity.getMarketingContact());
         dto.setPersonalContact(entity.getPersonalContact());
         dto.setReference(entity.getReference());
-        dto.setRecruiter(entity.getRecruiter());
-        dto.setTeamLead(entity.getTeamLead());
+        dto.setRecruiterId(entity.getRecruiterId());
+        dto.setTeamleadId(entity.getTeamLeadId());
         dto.setStatus(entity.getStatus());
         dto.setPassport(entity.getPassport());
         dto.setSalesExecutive(entity.getSalesExecutive());
@@ -175,6 +189,8 @@ public class ConsultantService {
         dto.setConsultantAddedTimeStamp(entity.getConsultantAddedTimeStamp());
         dto.setActualVisa(entity.getActualVisa());
         dto.setMarketingVisa(entity.getMarketingVisa());
+        dto.setRecruiterName(entity.getRecruiterName());
+        dto.setTeamleadName(entity.getTeamleadName());
         return dto;
     }
 
@@ -192,10 +208,10 @@ public class ConsultantService {
             existingConsultant.setPersonalContact(updatedConsultant.getPersonalContact());
         if (updatedConsultant.getReference() != null)
             existingConsultant.setReference(updatedConsultant.getReference());
-        if (updatedConsultant.getRecruiter() != null)
-            existingConsultant.setRecruiter(updatedConsultant.getRecruiter());
-        if (updatedConsultant.getTeamLead() != null)
-            existingConsultant.setTeamLead(updatedConsultant.getTeamLead());
+        if (updatedConsultant.getRecruiterId() != null)
+            existingConsultant.setRecruiterId(updatedConsultant.getRecruiterId());
+        if (updatedConsultant.getTeamLeadId() != null)
+            existingConsultant.setTeamLeadId(updatedConsultant.getTeamLeadId());
         if (updatedConsultant.getStatus() != null)
             existingConsultant.setStatus(updatedConsultant.getStatus());
         if (updatedConsultant.getPassport() != null)
@@ -238,58 +254,67 @@ public class ConsultantService {
 
     public ConsultantAddedResponse updateConsultant(String consultantId, ConsultantDto dto) {
 
+        logger.info("Updating the Consultant {}",consultantId);
         Optional<Consultant> optionalConsultant = consultantRepo.findById(consultantId);
         if (optionalConsultant.isEmpty()){
+            logger.warn("No Consultants Found With ID: {}",consultantId);
             throw new ConsultantNotFoundException("No Consultant Found With Id "+consultantId);
         }
         List<Consultant> duplicates= consultantRepo.findByEmailIdAndPersonalContact(dto.getEmailId(),dto.getPersonalContact());
         for(Consultant consultant: duplicates){
             if(!consultant.getConsultantId().equals(consultantId)) {
+                logger.warn("Consultant Already exists with same Email {} and personal contact {}",dto.getEmailId(),dto.getPersonalContact());
                 throw new ConsultantAlreadyExistsException("A consultant with the same email and personal contact already exists in the system.");
             }
         }
+        if(dto.getTeamleadId()!=null){
+            dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamleadId()).getBody().getData().getUserName());
+        }
         Consultant existingConsultant=optionalConsultant.get();
         Consultant updatedConsultant=convertDtoToEntity(dto);
-
         Consultant finalConsultant=updateExistingHotListWithUpdatedHotList(existingConsultant,updatedConsultant);
-
         consultantRepo.save(finalConsultant);
+        logger.info("Consultant {} is updated Successfully");
 
         ConsultantAddedResponse response=new ConsultantAddedResponse();
         response.setConsultantId(finalConsultant.getConsultantId());
         response.setName(finalConsultant.getName());
-        response.setRecruiter(finalConsultant.getRecruiter());
+        response.setRecruiter(finalConsultant.getRecruiterId());
         response.setAddedTimeStamp(LocalDateTime.now());
 
         return response;
     }
 
     public DeleteConsultantResponse deleteConsultant(String consultantId){
+        logger.info("Deleting the Consultant : {}",consultantId);
         Optional<Consultant> optionalConsultant = consultantRepo.findById(consultantId);
         if (optionalConsultant.isEmpty()){
+            logger.warn("No Consultant Found With ID : {}",consultantId);
             throw new ConsultantNotFoundException("No Consultant Found With Id "+consultantId);
         }
         consultantRepo.deleteById(consultantId);
+        logger.warn("Consultant {} is Deleted Successfully",consultantId);
         DeleteConsultantResponse response=new DeleteConsultantResponse();
         response.setConsultantId(consultantId);
         response.setAddedTimeStamp(LocalDateTime.now());
         return response;
     }
     public Page<ConsultantDto> getAllConsultants(Pageable pageable){
-
+        logger.info("Fetching All Consultants ......");
         Page<Consultant> list= consultantRepo.findAll(pageable);
         Page<ConsultantDto> dtoList=list.map(ConsultantService::convertEntityToDTO);
-
+        logger.info("Fetched {} consultants ",dtoList.getTotalElements());
         return dtoList;
     }
 
     public ConsultantDto getConsultantByID(String consultantId){
 
+        logger.info("Fetching consultant details for Consultant ID: {}",consultantId);
         Optional<Consultant> optionalHotList= consultantRepo.findById(consultantId);
         if (optionalHotList.isEmpty()) throw new ConsultantNotFoundException("No Consultant Found with ID :"+consultantId);
         Consultant consultant=optionalHotList.get();
         ConsultantDto dtoList=convertEntityToDTO(consultant);
-
+        logger.info("Found consultant details for Consultant ID: {}",consultantId);
         return dtoList;
     }
 //    public String addConsultantManually(List<ConsultantDto> list){
@@ -308,13 +333,66 @@ public class ConsultantService {
 
     public Page<ConsultantDto> search(Pageable pageable, String keyword){
 
+        logger.info("Searching Consultants with keyword : '{}' , page: {} ,size :{}",keyword,pageable.getPageNumber(),pageable.getPageSize());
         Page<Consultant> pageableHotList= consultantRepo.searchHotlist(keyword,pageable);
 
         Page<ConsultantDto> pageableHotListDto= pageableHotList.map(ConsultantService::convertEntityToDTO);
-
+        logger.info("Found {} consultants matching keyword '{}'", pageableHotList.getTotalElements(), keyword);
         return pageableHotListDto;
     }
+    private static EmployeeDropDownDto convertUserDtoToEmployeeDropDownDto(UserDto userDto) {
+        EmployeeDropDownDto dto=new EmployeeDropDownDto();
+        dto.setEmployeeId(userDto.getUserId());
+        dto.setEmployeeName(userDto.getUserName());
+        return dto;
+    }
+    public List<EmployeeDropDownDto> getEmployeeDetailsByRole(String role){
 
+        logger.info("Fetching Employee Details For role {}",role);
+        List<UserDto> employees=userServiceClient.getAllUsers().getData();
+        logger.info("Filtering Employees by US Entity...");
+        List<UserDto> employeesByRole=employees.stream()
+                .filter(employee -> "US".equalsIgnoreCase(employee.getEntity()))
+                .filter(employee-> employee.getRoles().contains(role))
+                .collect(Collectors.toList());
 
+        List<EmployeeDropDownDto> dropDownEmployees=employeesByRole.stream()
+               .map(ConsultantService::convertUserDtoToEmployeeDropDownDto)
+               .collect(Collectors.toList());
+        logger.info("Fetched {} Employees For Role {}",dropDownEmployees.size(),role);
+        return dropDownEmployees;
+    }
 
+    public Page<ConsultantDto> getConsultantsByUserId(Pageable pageable,String userId){
+
+        logger.info("Fetching the Consultants For UserID :{}",userId);
+       UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
+       if(user!=null){
+           if(!user.getEntity().equalsIgnoreCase("US")){
+               logger.warn("User {} does not belong to US entity",userId);
+               throw new UserNotFoundException("No User Found In US Entity with "+userId);
+           }
+       }
+        Page<Consultant> pageableHotlist=consultantRepo.findByRecruiterId(pageable,userId);
+        Page<ConsultantDto> pageableHotlistDto= pageableHotlist.map(ConsultantService::convertEntityToDTO);
+
+        logger.info("Found {} consultants for user {}",pageableHotlistDto.getTotalElements(),userId);
+       return pageableHotlistDto;
+    }
+    public Page<ConsultantDto> getTeamConsultants(Pageable pageable,String userId){
+
+        logger.info("Fetching the Consultants for User ID :{}",userId);
+           UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
+           if(user!=null){
+              if(!user.getEntity().equalsIgnoreCase("US")){
+                  logger.warn("User {} does not belong to US entity",userId);
+                  throw new UserNotFoundException("No User Found In US Entity with "+userId);
+              }
+           }
+        Page<Consultant> pageableHotList=consultantRepo.findByTeamLeadId(pageable,userId);
+        Page<ConsultantDto> hotListDtoPage=pageableHotList.map(ConsultantService::convertEntityToDTO);
+
+        logger.info("Found {} consultants for TeamLead {}",hotListDtoPage.getTotalElements(),userId);
+       return hotListDtoPage;
+    }
 }
