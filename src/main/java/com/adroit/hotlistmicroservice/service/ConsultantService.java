@@ -286,12 +286,12 @@ public class ConsultantService {
 
         logger.info("Fetching the Consultants For UserID :{}",userId);
        UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
-       if(user!=null){
-           if(!user.getEntity().equalsIgnoreCase("US")){
-               logger.warn("User {} does not belong to US entity",userId);
-               throw new UserNotFoundException("No User Found In US Entity with "+userId);
-           }
-       }
+       // if(user!=null){
+       //     if(!user.getEntity().equalsIgnoreCase("US")){
+       //         logger.warn("User {} does not belong to US entity",userId);
+       //         throw new UserNotFoundException("No User Found In US Entity with "+userId);
+       //     }
+       // }
         Page<Consultant> pageableHotlist=consultantRepo.findByRecruiterId(pageable,userId);
         Page<ConsultantDto> pageableHotlistDto= pageableHotlist.map(consultantMapper::toDTO);
 
