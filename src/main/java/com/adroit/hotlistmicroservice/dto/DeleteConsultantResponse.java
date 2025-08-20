@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class DeleteConsultantResponse {
 
     private String consultantId;
-    private LocalDateTime addedTimeStamp;
+    private LocalDateTime consultantAddedTimeStamp;
 
     public String getConsultantId() {
         return consultantId;
@@ -15,11 +15,11 @@ public class DeleteConsultantResponse {
         this.consultantId = consultantId;
     }
 
-    public LocalDateTime getAddedTimeStamp() {
-        return addedTimeStamp;
+    public LocalDateTime getConsultantAddedTimeStamp() {
+        return consultantAddedTimeStamp;
     }
 
-    public void setAddedTimeStamp(LocalDateTime addedTimeStamp) {
-        this.addedTimeStamp = addedTimeStamp;
+    public void setConsultantAddedTimeStamp(LocalDateTime consultantAddedTimeStamp) {
+        this.consultantAddedTimeStamp = consultantAddedTimeStamp;
     }
 }

@@ -6,28 +6,26 @@ import com.adroit.hotlistmicroservice.exception.ConsultantAlreadyExistsException
 import com.adroit.hotlistmicroservice.exception.ConsultantNotFoundException;
 import com.adroit.hotlistmicroservice.exception.UserNotFoundException;
 import com.adroit.hotlistmicroservice.filevalidator.FileValidator;
+import com.adroit.hotlistmicroservice.mapper.ConsultantMapper;
 import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.model.ConsultantDocument;
 import com.adroit.hotlistmicroservice.repo.ConsultantDocumentRepo;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
-import org.apache.catalina.User;
-import org.apache.commons.io.output.ClosedOutputStream;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.net.UnknownServiceException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
+
 
 @Service
 public class ConsultantService {
@@ -38,6 +36,8 @@ public class ConsultantService {
      UserServiceClient userServiceClient;
      @Autowired
      ConsultantDocumentRepo consultantDocumentRepo;
+     @Autowired
+     private ConsultantMapper consultantMapper;
 
     public static final Logger logger= LoggerFactory.getLogger(ConsultantService.class);
 
@@ -57,7 +57,8 @@ public class ConsultantService {
         if (dto.getTeamleadId()!=null){
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamleadId()).getBody().getData().getUserName());
         }
-        Consultant consultant = convertDtoToEntity(dto);
+        Consultant consultant = consultantMapper.toEntity(dto);
+
         List<Consultant> existedHotList=consultantRepo.findByEmailIdAndPersonalContact(consultant.getEmailId(),consultant.getPersonalContact());
         if(!existedHotList.isEmpty()){
             logger.warn("A consultant with the same email and personal contact already exists in the system");
@@ -103,13 +104,8 @@ public class ConsultantService {
         // Save again to update with documents
         Consultant savedConsultant=consultantRepo.save(consultant);
         logger.info("Consultant Created Successfully {}",savedConsultant.getConsultantId());
-        ConsultantAddedResponse response = new ConsultantAddedResponse();
-        response.setConsultantId(consultant.getConsultantId());
-        response.setName(consultant.getName());
-        response.setRecruiter(consultant.getRecruiterId());
-        response.setAddedTimeStamp(consultant.getConsultantAddedTimeStamp());
 
-        return response;
+        return consultantMapper.toConsultantAddedResponse(savedConsultant);
     }
     public ConsultantDocument saveDocument(MultipartFile file,String documentType,String fileType,Consultant consultant)
             throws IOException {
@@ -125,75 +121,6 @@ public class ConsultantService {
         logger.info("saved the {} type File In DataBase ",documentType);
         return consultantDocumentRepo.save(consultantDocument);
     }
-    public static Consultant  convertDtoToEntity(ConsultantDto dto) {
-        Consultant entity = new Consultant();
-
-        entity.setName(dto.getName());
-        entity.setEmailId(dto.getEmailId());
-        entity.setGrade(dto.getGrade());
-        entity.setMarketingContact(dto.getMarketingContact());
-        entity.setPersonalContact(dto.getPersonalContact());
-        entity.setReference(dto.getReference());
-        entity.setRecruiterId(dto.getRecruiterId());
-        entity.setTeamLeadId(dto.getTeamleadId());
-        entity.setStatus(dto.getStatus());
-        entity.setPassport(dto.getPassport());
-        entity.setSalesExecutive(dto.getSalesExecutive());
-        entity.setRemoteOnsite(dto.getRemoteOnsite());
-        entity.setTechnology(dto.getTechnology());
-        entity.setExperience(dto.getExperience());
-        entity.setLocation(dto.getLocation());
-        entity.setOriginalDOB(dto.getOriginalDOB());
-        entity.setEditedDOB(dto.getEditedDOB());
-        entity.setLinkedInUrl(dto.getLinkedInUrl());
-        entity.setRelocation(dto.getRelocation());
-        entity.setBillRate(dto.getBillRate());
-        entity.setPayroll(dto.getPayroll());
-        entity.setMarketingStartDate(dto.getMarketingStartDate());
-        entity.setRemarks(dto.getRemarks());
-        entity.setMarketingVisa(dto.getMarketingVisa());
-        entity.setActualVisa(dto.getActualVisa());
-        entity.setRecruiterName(dto.getRecruiterName());
-        entity.setTeamleadName(dto.getTeamleadName());
-        return entity;
-    }
-
-    public static ConsultantDto convertEntityToDTO(Consultant entity) {
-        ConsultantDto dto = new ConsultantDto();
-
-        dto.setConsultantId(entity.getConsultantId());
-        dto.setName(entity.getName());
-        dto.setEmailId(entity.getEmailId());
-        dto.setGrade(entity.getGrade());
-        dto.setMarketingContact(entity.getMarketingContact());
-        dto.setPersonalContact(entity.getPersonalContact());
-        dto.setReference(entity.getReference());
-        dto.setRecruiterId(entity.getRecruiterId());
-        dto.setTeamleadId(entity.getTeamLeadId());
-        dto.setStatus(entity.getStatus());
-        dto.setPassport(entity.getPassport());
-        dto.setSalesExecutive(entity.getSalesExecutive());
-        dto.setRemoteOnsite(entity.getRemoteOnsite());
-        dto.setTechnology(entity.getTechnology());
-        dto.setExperience(entity.getExperience());
-        dto.setLocation(entity.getLocation());
-        dto.setOriginalDOB(entity.getOriginalDOB());
-        dto.setEditedDOB(entity.getEditedDOB());
-        dto.setLinkedInUrl(entity.getLinkedInUrl());
-        dto.setRelocation(entity.getRelocation());
-        dto.setBillRate(entity.getBillRate());
-        dto.setPayroll(entity.getPayroll());
-        dto.setMarketingStartDate(entity.getMarketingStartDate());
-        dto.setRemarks(entity.getRemarks());
-        dto.setUpdatedTimeStamp(entity.getUpdatedTimeStamp());
-        dto.setConsultantAddedTimeStamp(entity.getConsultantAddedTimeStamp());
-        dto.setActualVisa(entity.getActualVisa());
-        dto.setMarketingVisa(entity.getMarketingVisa());
-        dto.setRecruiterName(entity.getRecruiterName());
-        dto.setTeamleadName(entity.getTeamleadName());
-        return dto;
-    }
-
     public Consultant updateExistingHotListWithUpdatedHotList(Consultant existingConsultant, Consultant updatedConsultant) {
 
         if (updatedConsultant.getName() != null)
@@ -271,18 +198,12 @@ public class ConsultantService {
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamleadId()).getBody().getData().getUserName());
         }
         Consultant existingConsultant=optionalConsultant.get();
-        Consultant updatedConsultant=convertDtoToEntity(dto);
+        Consultant updatedConsultant=consultantMapper.toEntity(dto);
         Consultant finalConsultant=updateExistingHotListWithUpdatedHotList(existingConsultant,updatedConsultant);
         consultantRepo.save(finalConsultant);
         logger.info("Consultant {} is updated Successfully");
 
-        ConsultantAddedResponse response=new ConsultantAddedResponse();
-        response.setConsultantId(finalConsultant.getConsultantId());
-        response.setName(finalConsultant.getName());
-        response.setRecruiter(finalConsultant.getRecruiterId());
-        response.setAddedTimeStamp(LocalDateTime.now());
-
-        return response;
+        return consultantMapper.toConsultantAddedResponse(finalConsultant);
     }
 
     public DeleteConsultantResponse deleteConsultant(String consultantId){
@@ -294,15 +215,13 @@ public class ConsultantService {
         }
         consultantRepo.deleteById(consultantId);
         logger.warn("Consultant {} is Deleted Successfully",consultantId);
-        DeleteConsultantResponse response=new DeleteConsultantResponse();
-        response.setConsultantId(consultantId);
-        response.setAddedTimeStamp(LocalDateTime.now());
-        return response;
+
+        return consultantMapper.toDeleteConsultantResponse(optionalConsultant.get());
     }
     public Page<ConsultantDto> getAllConsultants(Pageable pageable){
         logger.info("Fetching All Consultants ......");
         Page<Consultant> list= consultantRepo.findAll(pageable);
-        Page<ConsultantDto> dtoList=list.map(ConsultantService::convertEntityToDTO);
+        Page<ConsultantDto> dtoList=list.map(consultantMapper::toDTO);
         logger.info("Fetched {} consultants ",dtoList.getTotalElements());
         return dtoList;
     }
@@ -313,7 +232,7 @@ public class ConsultantService {
         Optional<Consultant> optionalHotList= consultantRepo.findById(consultantId);
         if (optionalHotList.isEmpty()) throw new ConsultantNotFoundException("No Consultant Found with ID :"+consultantId);
         Consultant consultant=optionalHotList.get();
-        ConsultantDto dtoList=convertEntityToDTO(consultant);
+        ConsultantDto dtoList=consultantMapper.toDTO(consultant);
         logger.info("Found consultant details for Consultant ID: {}",consultantId);
         return dtoList;
     }
@@ -336,7 +255,7 @@ public class ConsultantService {
         logger.info("Searching Consultants with keyword : '{}' , page: {} ,size :{}",keyword,pageable.getPageNumber(),pageable.getPageSize());
         Page<Consultant> pageableHotList= consultantRepo.searchHotlist(keyword,pageable);
 
-        Page<ConsultantDto> pageableHotListDto= pageableHotList.map(ConsultantService::convertEntityToDTO);
+        Page<ConsultantDto> pageableHotListDto= pageableHotList.map(consultantMapper::toDTO);
         logger.info("Found {} consultants matching keyword '{}'", pageableHotList.getTotalElements(), keyword);
         return pageableHotListDto;
     }
@@ -374,7 +293,7 @@ public class ConsultantService {
            }
        }
         Page<Consultant> pageableHotlist=consultantRepo.findByRecruiterId(pageable,userId);
-        Page<ConsultantDto> pageableHotlistDto= pageableHotlist.map(ConsultantService::convertEntityToDTO);
+        Page<ConsultantDto> pageableHotlistDto= pageableHotlist.map(consultantMapper::toDTO);
 
         logger.info("Found {} consultants for user {}",pageableHotlistDto.getTotalElements(),userId);
        return pageableHotlistDto;
@@ -390,9 +309,22 @@ public class ConsultantService {
               }
            }
         Page<Consultant> pageableHotList=consultantRepo.findByTeamLeadId(pageable,userId);
-        Page<ConsultantDto> hotListDtoPage=pageableHotList.map(ConsultantService::convertEntityToDTO);
+        Page<ConsultantDto> hotListDtoPage=pageableHotList.map(consultantMapper::toDTO);
 
         logger.info("Found {} consultants for TeamLead {}",hotListDtoPage.getTotalElements(),userId);
        return hotListDtoPage;
+    }
+    public Page<UserDto> getAllUSEntityUsers(Pageable pageable){
+        logger.info("Fetching the All US Users...");
+        List<UserDto> users=userServiceClient.getAllUsers().getData().stream()
+                .filter(user -> user.getEntity().equalsIgnoreCase("US"))
+                .collect(Collectors.toList());
+
+        int start=Math.min((int) pageable.getOffset(),users.size());
+        int end=Math.min(start + pageable.getPageSize(), users.size());
+
+        List<UserDto> pagedList=users.subList(start,end);
+        logger.info("Found {} US users ",users.size());
+       return new PageImpl<>(pagedList,pageable, users.size());
     }
 }

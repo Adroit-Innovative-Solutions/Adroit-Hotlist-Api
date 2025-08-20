@@ -3,6 +3,7 @@ package com.adroit.hotlistmicroservice.controller;
 import com.adroit.hotlistmicroservice.client.UserServiceClient;
 import com.adroit.hotlistmicroservice.dto.*;
 import com.adroit.hotlistmicroservice.service.ConsultantService;
+import org.apache.catalina.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -177,5 +178,17 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<UserDto>> getUserByUserId(@PathVariable String userId){
 
         return userServiceClient.getUserByUserID(userId);
+    }
+    @GetMapping("/user/allUsers")
+    public ResponseEntity<ApiResponse<PageResponse<UserDto>>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+         Pageable pageable=PageRequest.of(page,size);
+         Page<UserDto> response=consultantService.getAllUSEntityUsers(pageable);
+         PageResponse<UserDto> pageResponse=new PageResponse<>(response);
+         ApiResponse<PageResponse<UserDto>> apiResponse=new ApiResponse<>(true,"Users Data Fetched",pageResponse,null);
+
+         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
 }
