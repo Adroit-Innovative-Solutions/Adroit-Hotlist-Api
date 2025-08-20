@@ -8,9 +8,9 @@ public class ConsultantAddedResponse {
 
     private String name;
 
-    private String recruiter;
+    private String recruiterName;
 
-    private LocalDateTime addedTimeStamp;
+    private LocalDateTime consultantAddedTimeStamp;
 
     public String getConsultantId() {
         return consultantId;
@@ -28,19 +28,20 @@ public class ConsultantAddedResponse {
         this.name = name;
     }
 
-    public String getRecruiter() {
-        return recruiter;
+
+    public String getRecruiterName() {
+        return recruiterName;
     }
 
-    public void setRecruiter(String recruiter) {
-        this.recruiter = recruiter;
+    public void setRecruiterName(String recruiterName) {
+        this.recruiterName = recruiterName;
     }
 
-    public LocalDateTime getAddedTimeStamp() {
-        return addedTimeStamp;
+    public LocalDateTime getConsultantAddedTimeStamp() {
+        return consultantAddedTimeStamp;
     }
 
-    public void setAddedTimeStamp(LocalDateTime addedTimeStamp) {
-        this.addedTimeStamp = addedTimeStamp;
+    public void setConsultantAddedTimeStamp(LocalDateTime consultantAddedTimeStamp) {
+        this.consultantAddedTimeStamp = consultantAddedTimeStamp;
     }
 }

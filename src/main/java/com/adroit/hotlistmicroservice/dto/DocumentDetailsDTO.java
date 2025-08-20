@@ -1,7 +1,5 @@
 package com.adroit.hotlistmicroservice.dto;
 
-import com.adroit.hotlistmicroservice.model.Consultant;
-
 import java.time.LocalDateTime;
 
 public class DocumentDetailsDTO {

@@ -5,6 +5,7 @@ import com.adroit.hotlistmicroservice.dto.DocumentAddedResponse;
 import com.adroit.hotlistmicroservice.dto.DocumentDetailsDTO;
 import com.adroit.hotlistmicroservice.exception.DocumentNotFoundException;
 import com.adroit.hotlistmicroservice.filevalidator.FileValidator;
+import com.adroit.hotlistmicroservice.mapper.ConsultantDocumentMapper;
 import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.model.ConsultantDocument;
 import com.adroit.hotlistmicroservice.repo.ConsultantDocumentRepo;
@@ -32,6 +33,8 @@ public class ConsultantDocumentService {
     ConsultantRepo consultantRepo;
     @Autowired
     ConsultantService consultantService;
+    @Autowired
+    ConsultantDocumentMapper consultantDocumentMapper;
 
     private static final Logger logger= LoggerFactory.getLogger(ConsultantDocumentService.class);
     public ConsultantDocument downloadDocument(Long documentId){
@@ -52,20 +55,10 @@ public class ConsultantDocumentService {
 
         List<ConsultantDocument> consultantDocument=consultantDocumentRepo.findByConsultant_ConsultantId(consultantId);
         List<DocumentDetailsDTO> documentDetailsDTOS=consultantDocument.stream()
-               .map(this::convertConsultantDocumentToDTO)
+               .map(consultantDocumentMapper::toDocumentDTO)
                .collect(Collectors.toList());
 
       return documentDetailsDTOS;
-    }
-    public DocumentDetailsDTO convertConsultantDocumentToDTO(ConsultantDocument consultantDocument){
-
-        DocumentDetailsDTO documentDetailsDTO=new DocumentDetailsDTO();
-        documentDetailsDTO.setDocumentId(consultantDocument.getDocumentId());
-        documentDetailsDTO.setFileName(consultantDocument.getFileName());
-        documentDetailsDTO.setDocumentType(consultantDocument.getDocumentType());
-        documentDetailsDTO.setCreatedAt(consultantDocument.getCreatedAt());
-
-        return documentDetailsDTO;
     }
     public DeleteDocumentDTO deleteDocument(long documentId){
 
