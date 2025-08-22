@@ -13,7 +13,7 @@ public class ConsultantDto {
     private String personalContact;
     private String reference;
     private String recruiterId;
-    private String teamleadId;
+    private String teamLeadId;
     private String recruiterName;
     private String teamleadName;
     private String status;
@@ -108,12 +108,12 @@ public class ConsultantDto {
         this.recruiterId = recruiterId;
     }
 
-    public String getTeamleadId() {
-        return teamleadId;
+    public String getTeamLeadId() {
+        return teamLeadId;
     }
 
-    public void setTeamleadId(String teamleadId) {
-        this.teamleadId = teamleadId;
+    public void setTeamLeadId(String teamLeadId) {
+        this.teamLeadId = teamLeadId;
     }
 
     public String getStatus() {

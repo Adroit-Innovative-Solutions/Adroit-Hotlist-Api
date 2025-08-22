@@ -11,6 +11,7 @@ import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.model.ConsultantDocument;
 import com.adroit.hotlistmicroservice.repo.ConsultantDocumentRepo;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
+import com.adroit.hotlistmicroservice.utils.ConsultantSpecifications;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +55,8 @@ public class ConsultantService {
         if(dto.getRecruiterId()!=null){
             dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
         }
-        if (dto.getTeamleadId()!=null){
-            dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamleadId()).getBody().getData().getUserName());
+        if (dto.getTeamLeadId()!=null){
+            dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
         Consultant consultant = consultantMapper.toEntity(dto);
 
@@ -194,8 +195,8 @@ public class ConsultantService {
                 throw new ConsultantAlreadyExistsException("A consultant with the same email and personal contact already exists in the system.");
             }
         }
-        if(dto.getTeamleadId()!=null){
-            dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamleadId()).getBody().getData().getUserName());
+        if(dto.getTeamLeadId()!=null){
+            dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
         Consultant existingConsultant=optionalConsultant.get();
         Consultant updatedConsultant=consultantMapper.toEntity(dto);
@@ -218,11 +219,21 @@ public class ConsultantService {
 
         return consultantMapper.toDeleteConsultantResponse(optionalConsultant.get());
     }
-    public Page<ConsultantDto> getAllConsultants(Pageable pageable){
-        logger.info("Fetching All Consultants ......");
-        Page<Consultant> list= consultantRepo.findAll(pageable);
-        Page<ConsultantDto> dtoList=list.map(consultantMapper::toDTO);
-        logger.info("Fetched {} consultants ",dtoList.getTotalElements());
+    public Page<ConsultantDto> getAllConsultants(Pageable pageable, String keyword) {
+        logger.info("Fetching All Consultants with keyword: {}...", keyword);
+
+        Page<Consultant> list;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // ✅ Use search specification when keyword is provided
+            list = consultantRepo.findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
+        } else {
+            // ✅ Fall back to simple findAll when no keyword
+            list = consultantRepo.findAll(pageable);
+        }
+
+        Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
+        logger.info("Fetched {} consultants with keyword: {}", dtoList.getTotalElements(), keyword);
         return dtoList;
     }
 
@@ -253,7 +264,7 @@ public class ConsultantService {
     public Page<ConsultantDto> search(Pageable pageable, String keyword){
 
         logger.info("Searching Consultants with keyword : '{}' , page: {} ,size :{}",keyword,pageable.getPageNumber(),pageable.getPageSize());
-        Page<Consultant> pageableHotList= consultantRepo.searchHotlist(keyword,pageable);
+        Page<Consultant> pageableHotList= consultantRepo.searchHotlistByUtil(keyword,pageable);
 
         Page<ConsultantDto> pageableHotListDto= pageableHotList.map(consultantMapper::toDTO);
         logger.info("Found {} consultants matching keyword '{}'", pageableHotList.getTotalElements(), keyword);
@@ -282,7 +293,7 @@ public class ConsultantService {
         return dropDownEmployees;
     }
 
-    public Page<ConsultantDto> getConsultantsByUserId(Pageable pageable,String userId){
+    public Page<ConsultantDto> getConsultantsByUserId(Pageable pageable,String userId,String keyword){
 
         logger.info("Fetching the Consultants For UserID :{}",userId);
        UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
@@ -292,13 +303,13 @@ public class ConsultantService {
        //         throw new UserNotFoundException("No User Found In US Entity with "+userId);
        //     }
        // }
-        Page<Consultant> pageableHotlist=consultantRepo.findByRecruiterId(pageable,userId);
+        Page<Consultant> pageableHotlist=consultantRepo.searchByRecruiter(userId, keyword, pageable);
         Page<ConsultantDto> pageableHotlistDto= pageableHotlist.map(consultantMapper::toDTO);
 
         logger.info("Found {} consultants for user {}",pageableHotlistDto.getTotalElements(),userId);
        return pageableHotlistDto;
     }
-    public Page<ConsultantDto> getTeamConsultants(Pageable pageable,String userId){
+    public Page<ConsultantDto> getTeamConsultants(Pageable pageable,String userId,String keyword){
 
         logger.info("Fetching the Consultants for User ID :{}",userId);
            UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
@@ -308,7 +319,7 @@ public class ConsultantService {
                   throw new UserNotFoundException("No User Found In US Entity with "+userId);
               }
            }
-        Page<Consultant> pageableHotList=consultantRepo.findByTeamLeadId(pageable,userId);
+        Page<Consultant> pageableHotList=consultantRepo.searchByTeamLead(userId, keyword, pageable);
         Page<ConsultantDto> hotListDtoPage=pageableHotList.map(consultantMapper::toDTO);
 
         logger.info("Found {} consultants for TeamLead {}",hotListDtoPage.getTotalElements(),userId);
