@@ -50,16 +50,20 @@ public class ConsultantService {
         }
         return String.format("CONS%05d",nextNum);
     }
-    public ConsultantAddedResponse addConsultant(ConsultantDto dto, List<MultipartFile> resumes, List<MultipartFile> documents) throws IOException {
+    public ConsultantAddedResponse addConsultant(ConsultantDto dto, List<MultipartFile> resumes, List<MultipartFile> documents,boolean isAssignAll) throws IOException {
         logger.info("Creating new consultant {}",dto.getName());
+        logger.info("Creating new consultant {}",isAssignAll);
         if(dto.getRecruiterId()!=null){
             dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
         }
         if (dto.getTeamLeadId()!=null){
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
+//        if(dto.getSalesExecutiveId()!=null){
+//            dto.setSalesExecutiveId(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
+//        }
         Consultant consultant = consultantMapper.toEntity(dto);
-
+         consultant.setIsAssignAll(isAssignAll);
         List<Consultant> existedHotList=consultantRepo.findByEmailIdAndPersonalContact(consultant.getEmailId(),consultant.getPersonalContact());
         if(!existedHotList.isEmpty()){
             logger.warn("A consultant with the same email and personal contact already exists in the system");
@@ -175,6 +179,8 @@ public class ConsultantService {
         if (updatedConsultant.getRemarks() != null)
             existingConsultant.setRemarks(updatedConsultant.getRemarks());
 
+            existingConsultant.setIsAssignAll(updatedConsultant.getIsAssignAll());
+
             existingConsultant.setUpdatedTimeStamp(LocalDateTime.now());
 
         return existingConsultant;
@@ -195,9 +201,15 @@ public class ConsultantService {
                 throw new ConsultantAlreadyExistsException("A consultant with the same email and personal contact already exists in the system.");
             }
         }
-        if(dto.getTeamLeadId()!=null){
+        if(dto.getRecruiterId()!=null){
+            dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
+        }
+        if (dto.getTeamLeadId()!=null){
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
+//        if(dto.getSalesExecutiveId()!=null){
+//            dto.setSalesExecutiveId(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
+//        }
         Consultant existingConsultant=optionalConsultant.get();
         Consultant updatedConsultant=consultantMapper.toEntity(dto);
         Consultant finalConsultant=updateExistingHotListWithUpdatedHotList(existingConsultant,updatedConsultant);

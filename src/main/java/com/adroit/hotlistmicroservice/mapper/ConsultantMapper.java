@@ -12,11 +12,11 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ConsultantMapper {
 
-
+    @Mapping(source = "isAssignAll", target = "isAssignAll")
     ConsultantDto toDTO(Consultant consultant);
 
-    Consultant toEntity(ConsultantDto consultantDto);
-    
+    @Mapping(source = "isAssignAll", target = "isAssignAll")
+    Consultant toEntity(ConsultantDto dto);
     ConsultantAddedResponse toConsultantAddedResponse(Consultant consultant);
 
     DeleteConsultantResponse toDeleteConsultantResponse(Consultant consultant);
