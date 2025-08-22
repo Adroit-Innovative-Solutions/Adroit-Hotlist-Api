@@ -46,7 +46,7 @@ public class Consultant {
     private String remarks;
     private LocalDateTime consultantAddedTimeStamp;
     private LocalDateTime updatedTimeStamp;
-
+    private boolean isAssignAll;
 
     public String getRecruiterName() {
         return recruiterName;
@@ -302,5 +302,13 @@ public class Consultant {
 
     public void setSalesExecutiveId(String salesExecutiveId) {
         this.salesExecutiveId = salesExecutiveId;
+    }
+
+    public boolean getIsAssignAll() {
+        return isAssignAll;
+    }
+
+    public void setIsAssignAll(boolean isAssignAll) {
+        this.isAssignAll = isAssignAll;
     }
 }

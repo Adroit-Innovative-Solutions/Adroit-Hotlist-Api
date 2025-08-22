@@ -19,6 +19,7 @@ public class ConsultantDto {
     private String status;
     private String passport;
     private String salesExecutive;
+    private String salesExecutiveId;
     private String remoteOnsite;
     private String technology;
     private String experience;
@@ -35,6 +36,7 @@ public class ConsultantDto {
     private LocalDateTime updatedTimeStamp;
     private String marketingVisa;
     private String actualVisa;
+    private boolean isAssignAll;
 
     public String getMarketingVisa() {
         return marketingVisa;
@@ -274,5 +276,20 @@ public class ConsultantDto {
 
     public void setTeamleadName(String teamleadName) {
         this.teamleadName = teamleadName;
+    }
+
+    public String getSalesExecutiveId() {
+        return salesExecutiveId;
+    }
+
+    public void setSalesExecutiveId(String salesExecutiveId) {
+        this.salesExecutiveId = salesExecutiveId;
+    }
+    public boolean getIsAssignAll() {
+        return isAssignAll;
+    }
+
+    public void setIsAssignAll(boolean isAssignAll) {
+        this.isAssignAll = isAssignAll;
     }
 }

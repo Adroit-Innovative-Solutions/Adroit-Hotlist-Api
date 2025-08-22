@@ -41,11 +41,12 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<ConsultantAddedResponse>> addConsultant(
             @ModelAttribute ConsultantDto hotList,
             @RequestParam(value = "resumes",required = false) List<MultipartFile> resumes,
-            @RequestParam(value = "documents",required = false) List<MultipartFile> documents
+            @RequestParam(value = "documents",required = false) List<MultipartFile> documents,
+            @RequestParam(value = "isAssignAll", required = false, defaultValue = "false") boolean isAssignAll
     ) throws IOException {
 
         logger.info("resumes ------------------------>>:: {}",resumes);
-        ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList, resumes, documents);
+        ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList, resumes, documents,isAssignAll);
         ApiResponse<ConsultantAddedResponse> response=new ApiResponse<>(true,"Consultant Created",consultantResponse,null);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -187,16 +188,4 @@ public class ConsultantController {
          return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
 
-    @PostMapping("/fixteamleadId")
-    public String setTeamLeadId(){
-        List<Consultant> consultants=consultantRepo.findAll();
-
-        for(Consultant cons:consultants){
-            logger.info("Team Lead Id :{}",consultantRepo.userIdByUserName(cons.getTeamleadName()));
-           cons.setTeamLeadId(consultantRepo.userIdByUserName(cons.getTeamleadName()));
-
-           consultantRepo.save(cons);
-        }
-       return "OK";
-    }
 }

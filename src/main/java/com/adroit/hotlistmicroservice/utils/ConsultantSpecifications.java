@@ -1,6 +1,5 @@
 package com.adroit.hotlistmicroservice.utils;
 
-
 import com.adroit.hotlistmicroservice.model.Consultant;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -46,6 +45,9 @@ public class ConsultantSpecifications {
             predicates.add(cb.like(cb.lower(root.get("payroll")), pattern));
             predicates.add(cb.like(cb.lower(root.get("remarks")), pattern));
 
+            // ✅ NEW: Add salesExecutiveId field to search
+            predicates.add(cb.like(cb.lower(root.get("salesExecutiveId")), pattern));
+
             // ✅ date fields (converted to string using MySQL date_format)
             predicates.add(cb.like(
                     cb.function("date_format", String.class, root.get("originalDOB"), cb.literal("%Y-%m-%d")), pattern));
@@ -58,19 +60,33 @@ public class ConsultantSpecifications {
         };
     }
 
-    // ✅ Recruiter + keyword search
+    // ✅ Recruiter + keyword search with isAssignAll support
     public static Specification<Consultant> recruiterSearch(String recruiterId, String keyword) {
         return Specification.<Consultant>where((root, query, cb) ->
-                        cb.equal(root.get("recruiterId"), recruiterId))
+                        cb.or(
+                                cb.equal(root.get("recruiterId"), recruiterId),
+                                cb.isTrue(root.get("isAssignAll"))
+                        ))
                 .and(createSearchSpecification(keyword));
     }
 
-    // ✅ TeamLead + keyword search
+    // ✅ TeamLead + keyword search with isAssignAll support
     public static Specification<Consultant> teamLeadSearch(String teamLeadId, String keyword) {
         return Specification.<Consultant>where((root, query, cb) ->
-                        cb.equal(root.get("teamLeadId"), teamLeadId))
+                        cb.or(
+                                cb.equal(root.get("teamLeadId"), teamLeadId),
+                                cb.isTrue(root.get("isAssignAll"))
+                        ))
                 .and(createSearchSpecification(keyword));
     }
 
+    // ✅ Sales Executive + keyword search with isAssignAll support
+    public static Specification<Consultant> salesExecutiveSearch(String salesExecutiveId, String keyword) {
+        return Specification.<Consultant>where((root, query, cb) ->
+                        cb.or(
+                                cb.equal(root.get("salesExecutiveId"), salesExecutiveId),
+                                cb.isTrue(root.get("isAssignAll"))
+                        ))
+                .and(createSearchSpecification(keyword));
+    }
 }
-

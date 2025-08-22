@@ -4,7 +4,6 @@ import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.utils.ConsultantSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -74,12 +73,5 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
         }
         return findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
     }
-
-    @Query(value = """
-    SELECT user_id 
-    FROM user_details
-    WHERE user_name = :userName
-""", nativeQuery = true)
-    String userIdByUserName(@Param("userName") String userName);
 
 }
