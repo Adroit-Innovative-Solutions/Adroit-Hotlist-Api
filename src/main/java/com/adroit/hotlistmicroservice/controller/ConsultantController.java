@@ -2,6 +2,8 @@ package com.adroit.hotlistmicroservice.controller;
 
 import com.adroit.hotlistmicroservice.client.UserServiceClient;
 import com.adroit.hotlistmicroservice.dto.*;
+import com.adroit.hotlistmicroservice.model.Consultant;
+import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.service.ConsultantService;
 import org.apache.catalina.User;
 import org.slf4j.Logger;
@@ -30,6 +32,8 @@ public class ConsultantController {
     private ConsultantService consultantService;
     @Autowired
     private UserServiceClient userServiceClient;
+    @Autowired
+    private ConsultantRepo consultantRepo;
 
     private static final Logger logger = LoggerFactory.getLogger(ConsultantController.class);
 
@@ -46,37 +50,25 @@ public class ConsultantController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-     @GetMapping("/allConsultants")
-     public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllConsultants(
-            @RequestParam (defaultValue = "0") int page,
-            @RequestParam (defaultValue = "10") int size
-     ){
-         Pageable pageable= PageRequest.of(
-                 page, size
-         , Sort.Direction.DESC,"updatedTimeStamp");
+    @GetMapping("/allConsultants")
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllConsultants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword // ✅ Added keyword parameter
+    ){
+        Pageable pageable = PageRequest.of(
+                page, size,
+                Sort.Direction.DESC, "updatedTimeStamp"
+        );
 
-      Page<ConsultantDto> hotList= consultantService.getAllConsultants(pageable);
-      PageResponse<ConsultantDto> pageResponse=new PageResponse<>(hotList);
-      ApiResponse<PageResponse<ConsultantDto>> response=new ApiResponse<>(true,"HotList data fetched.",pageResponse,null);
+        Page<ConsultantDto> consultants = consultantService.getAllConsultants(pageable, keyword); // ✅ Updated service call
+        PageResponse<ConsultantDto> pageResponse = new PageResponse<>(consultants);
+        ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(
+                true, "Consultants data fetched.", pageResponse, null
+        );
 
-      return new ResponseEntity<>(response,HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
-//    @PostMapping("/addManually")
-//    public String addConsultManually(@RequestBody List<ConsultantDto> list){
-//
-//        return hotListService.addConsultantManually(list);
-//
-//    }
-//    @PostMapping("/addConsultant")
-//    public ResponseEntity<ApiResponse<ConsultantAddedResponse>> addConsultant(
-//            @RequestBody ConsultantDto hotList
-//    ) throws IOException {
-//
-//        ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList);
-//        ApiResponse<ConsultantAddedResponse> response=new ApiResponse<>(true,"Consultant Created",consultantResponse,null);
-//
-//        return new ResponseEntity<ApiResponse<ConsultantAddedResponse>>(response, HttpStatus.CREATED);
-//    }
 
     @PutMapping(value = "/updateConsultant/{consultantId}",consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<ConsultantAddedResponse>> updateConsultant(
@@ -141,13 +133,14 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> consultantsByUserId(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
             @PathVariable String userId
     ){
         Pageable pageable=PageRequest.of(
                 page,
                 size,
                 Sort.Direction.DESC,"updatedTimeStamp");
-       Page<ConsultantDto> response=consultantService.getConsultantsByUserId(pageable,userId);
+       Page<ConsultantDto> response=consultantService.getConsultantsByUserId(pageable,userId,keyword);
         PageResponse<ConsultantDto> pageResponse=new PageResponse<>(response);
        ApiResponse<PageResponse<ConsultantDto>> apiResponse=new ApiResponse<>(true,"Consultant Data Fetched",pageResponse,null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
@@ -162,14 +155,16 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getTeamConsultants(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
             @PathVariable String userId
+
     ){
         Pageable pageable=PageRequest.of(
                 page,
                 size,
                 Sort.Direction.DESC,"updatedTimeStamp");
 
-       Page<ConsultantDto> response=consultantService.getTeamConsultants(pageable,userId);
+       Page<ConsultantDto> response=consultantService.getTeamConsultants(pageable,userId,keyword);
         PageResponse<ConsultantDto> pageResponse=new PageResponse<>(response);
        ApiResponse<PageResponse<ConsultantDto>> apiResponse=new ApiResponse<>(true,"HotList Data Fetched",pageResponse,null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
@@ -190,5 +185,18 @@ public class ConsultantController {
          ApiResponse<PageResponse<UserDto>> apiResponse=new ApiResponse<>(true,"Users Data Fetched",pageResponse,null);
 
          return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+
+    @PostMapping("/fixteamleadId")
+    public String setTeamLeadId(){
+        List<Consultant> consultants=consultantRepo.findAll();
+
+        for(Consultant cons:consultants){
+            logger.info("Team Lead Id :{}",consultantRepo.userIdByUserName(cons.getTeamleadName()));
+           cons.setTeamLeadId(consultantRepo.userIdByUserName(cons.getTeamleadName()));
+
+           consultantRepo.save(cons);
+        }
+       return "OK";
     }
 }

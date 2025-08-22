@@ -25,6 +25,7 @@ public class Consultant {
     private String status;
     private String passport;
     private String salesExecutive;
+    private String salesExecutiveId;
     private String remoteOnsite;
     private String technology;
 
@@ -295,4 +296,11 @@ public class Consultant {
         this.documents = documents;
     }
 
+    public String getSalesExecutiveId() {
+        return salesExecutiveId;
+    }
+
+    public void setSalesExecutiveId(String salesExecutiveId) {
+        this.salesExecutiveId = salesExecutiveId;
+    }
 }
