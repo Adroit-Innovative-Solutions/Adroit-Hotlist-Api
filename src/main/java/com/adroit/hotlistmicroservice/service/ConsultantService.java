@@ -19,12 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -325,13 +327,25 @@ public class ConsultantService {
 
         logger.info("Fetching the Consultants for User ID :{}",userId);
            UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
+           logger.info("user from the User Micro service {} :: {}",user.getUserId(),user.getAssociatedTeamLeadId());
+        ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(userId);
+        logger.info("Raw user response: {}", response);
            if(user!=null){
               if(!user.getEntity().equalsIgnoreCase("US")){
                   logger.warn("User {} does not belong to US entity",userId);
                   throw new UserNotFoundException("No User Found In US Entity with "+userId);
               }
            }
-        Page<Consultant> pageableHotList=consultantRepo.searchByTeamLead(userId, keyword, pageable);
+          Set<String> roles=user.getRoles();
+          boolean isTeamLead=roles.stream().anyMatch(role -> role.equalsIgnoreCase("TEAMLEAD"));
+          logger.info("isTeamLead ---------------> {}",isTeamLead);
+          Page<Consultant> pageableHotList;
+          if(isTeamLead) {
+               pageableHotList = consultantRepo.searchByTeamLead(userId, keyword, pageable);
+          }else {
+              String teamLeadId=user.getAssociatedTeamLeadId();
+               pageableHotList = consultantRepo.searchByTeamLead(teamLeadId, keyword, pageable);
+          }
         Page<ConsultantDto> hotListDtoPage=pageableHotList.map(consultantMapper::toDTO);
 
         logger.info("Found {} consultants for TeamLead {}",hotListDtoPage.getTotalElements(),userId);
