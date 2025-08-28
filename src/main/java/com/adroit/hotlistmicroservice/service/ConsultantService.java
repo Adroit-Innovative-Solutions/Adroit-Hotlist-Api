@@ -61,9 +61,9 @@ public class ConsultantService {
         if (dto.getTeamLeadId()!=null){
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
-//        if(dto.getSalesExecutiveId()!=null){
-//            dto.setSalesExecutiveId(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
-//        }
+       if(dto.getSalesExecutiveId()!=null){
+           dto.setSalesExecutiveId(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
+       }
         Consultant consultant = consultantMapper.toEntity(dto);
          consultant.setIsAssignAll(isAssignAll);
         List<Consultant> existedHotList=consultantRepo.findByEmailIdAndPersonalContact(consultant.getEmailId(),consultant.getPersonalContact());
