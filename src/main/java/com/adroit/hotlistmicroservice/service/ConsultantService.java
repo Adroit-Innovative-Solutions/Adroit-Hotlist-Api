@@ -62,7 +62,7 @@ public class ConsultantService {
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
        if(dto.getSalesExecutiveId()!=null){
-           dto.setSalesExecutiveId(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
+           dto.setSalesExecutive(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
        }
         Consultant consultant = consultantMapper.toEntity(dto);
          consultant.setIsAssignAll(isAssignAll);
