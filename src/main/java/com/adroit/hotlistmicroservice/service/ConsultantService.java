@@ -150,6 +150,8 @@ public class ConsultantService {
             existingConsultant.setStatus(updatedConsultant.getStatus());
         if (updatedConsultant.getPassport() != null)
             existingConsultant.setPassport(updatedConsultant.getPassport());
+        if (updatedConsultant.getSalesExecutiveId() != null)
+            existingConsultant.setSalesExecutiveId(updatedConsultant.getSalesExecutiveId());
         if (updatedConsultant.getSalesExecutive() != null)
             existingConsultant.setSalesExecutive(updatedConsultant.getSalesExecutive());
         if (updatedConsultant.getRemoteOnsite() != null)
@@ -209,9 +211,9 @@ public class ConsultantService {
         if (dto.getTeamLeadId()!=null){
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
-//        if(dto.getSalesExecutiveId()!=null){
-//            dto.setSalesExecutiveId(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
-//        }
+        if(dto.getSalesExecutiveId()!=null){
+            dto.setSalesExecutive(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
+        }
         Consultant existingConsultant=optionalConsultant.get();
         Consultant updatedConsultant=consultantMapper.toEntity(dto);
         Consultant finalConsultant=updateExistingHotListWithUpdatedHotList(existingConsultant,updatedConsultant);
