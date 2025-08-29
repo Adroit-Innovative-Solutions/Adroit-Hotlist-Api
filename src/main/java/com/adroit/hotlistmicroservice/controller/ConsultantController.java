@@ -187,5 +187,20 @@ public class ConsultantController {
 
          return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
+    @GetMapping("/salesExecutiveConsultants/{userId}")
+    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getSalesExecutiveConsultants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @PathVariable String userId
+    ){
+        Pageable pageable=PageRequest.of(page,
+                size,
+                Sort.Direction.DESC,"updatedTimeStamp");
+        Page<ConsultantDto> pageResponse=consultantService.getSalesExecutiveConsultants(userId,keyword,pageable);
+        PageResponse<ConsultantDto> response=new PageResponse<>(pageResponse);
+        ApiResponse apiResponse=new ApiResponse<>(true,"Fetched Sales Executive Consultants",response,null);
+       return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
 
 }
