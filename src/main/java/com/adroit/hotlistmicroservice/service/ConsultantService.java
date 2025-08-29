@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -223,14 +224,20 @@ public class ConsultantService {
         return consultantMapper.toConsultantAddedResponse(finalConsultant);
     }
 
-    public DeleteConsultantResponse deleteConsultant(String consultantId){
+    public DeleteConsultantResponse deleteConsultant(String consultantId,String userId){
         logger.info("Deleting the Consultant : {}",consultantId);
+        UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
+        if (user==null) throw new UserNotFoundException("No User Found With ID "+userId);
         Optional<Consultant> optionalConsultant = consultantRepo.findById(consultantId);
         if (optionalConsultant.isEmpty()){
             logger.warn("No Consultant Found With ID : {}",consultantId);
             throw new ConsultantNotFoundException("No Consultant Found With Id "+consultantId);
         }
-        consultantRepo.deleteById(consultantId);
+        Consultant consultant= optionalConsultant.get();
+        consultant.setIsDeleted(true);
+        consultant.setDeletedBy(userId);
+        consultant.setDeletedAt(LocalDateTime.now());
+        consultantRepo.save(consultant);
         logger.warn("Consultant {} is Deleted Successfully",consultantId);
 
         return consultantMapper.toDeleteConsultantResponse(optionalConsultant.get());
@@ -241,13 +248,12 @@ public class ConsultantService {
         Page<Consultant> list;
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            // ✅ Use search specification when keyword is provided
             list = consultantRepo.findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
         } else {
-            // ✅ Fall back to simple findAll when no keyword
             list = consultantRepo.findAll(pageable);
         }
-
+        list.stream()
+                .filter(consultant -> consultant.getIsDeleted()==false);
         Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
         logger.info("Fetched {} consultants with keyword: {}", dtoList.getTotalElements(), keyword);
         return dtoList;
@@ -263,20 +269,6 @@ public class ConsultantService {
         logger.info("Found consultant details for Consultant ID: {}",consultantId);
         return dtoList;
     }
-//    public String addConsultantManually(List<ConsultantDto> list){
-//
-//        list.stream()
-//                .map(HotListService::convertDtoToEntity)
-//                .forEach(hotList -> {
-//                    hotList.setConsultantId(this.generateConsultantId());
-//                    hotList.setConsultantAddedTimeStamp(LocalDateTime.now());
-//                    hotList.setUpdatedTimeStamp(LocalDateTime.now());
-//                    hotListRepo.save(hotList);
-//                });
-//
-//        return "Success" ;
-//    }
-
     public Page<ConsultantDto> search(Pageable pageable, String keyword){
 
         logger.info("Searching Consultants with keyword : '{}' , page: {} ,size :{}",keyword,pageable.getPageNumber(),pageable.getPageSize());
@@ -319,7 +311,7 @@ public class ConsultantService {
        //         throw new UserNotFoundException("No User Found In US Entity with "+userId);
        //     }
        // }
-        Page<Consultant> pageableHotlist=consultantRepo.searchByRecruiter(userId, keyword, pageable);
+        Page<Consultant> pageableHotlist=consultantRepo.consultantsByRecruiter(userId, keyword, pageable);
         Page<ConsultantDto> pageableHotlistDto= pageableHotlist.map(consultantMapper::toDTO);
 
         logger.info("Found {} consultants for user {}",pageableHotlistDto.getTotalElements(),userId);
@@ -343,10 +335,10 @@ public class ConsultantService {
           logger.info("isTeamLead ---------------> {}",isTeamLead);
           Page<Consultant> pageableHotList;
           if(isTeamLead) {
-               pageableHotList = consultantRepo.searchByTeamLead(userId, keyword, pageable);
+               pageableHotList = consultantRepo.consultantsByTeamLead(userId, keyword, pageable);
           }else {
               String teamLeadId=user.getAssociatedTeamLeadId();
-               pageableHotList = consultantRepo.searchByTeamLead(teamLeadId, keyword, pageable);
+               pageableHotList = consultantRepo.consultantsByTeamLead(teamLeadId, keyword, pageable);
           }
         Page<ConsultantDto> hotListDtoPage=pageableHotList.map(consultantMapper::toDTO);
 
@@ -365,5 +357,16 @@ public class ConsultantService {
         List<UserDto> pagedList=users.subList(start,end);
         logger.info("Found {} US users ",users.size());
        return new PageImpl<>(pagedList,pageable, users.size());
+    }
+    public Page<ConsultantDto> getSalesExecutiveConsultants(String salesExecutiveId,String keyword,Pageable pageable){
+        logger.info("Fetching the Consultants for Sales Executive ID :{}",salesExecutiveId);
+       UserDto userDto=userServiceClient.getUserByUserID(salesExecutiveId).getBody().getData();
+       if(userDto==null){
+           logger.error("No User Found With ID {}",salesExecutiveId);
+           throw new UserNotFoundException("No User Found With ID "+salesExecutiveId);
+       }
+       Page<Consultant> pageableHotList=consultantRepo.consultantsBySalesExecutive(salesExecutiveId,keyword,pageable);
+        logger.info("Found {} consultants for SalesExecutive {}",pageableHotList.getTotalElements(),salesExecutiveId);
+       return pageableHotList.map(consultantMapper::toDTO);
     }
 }

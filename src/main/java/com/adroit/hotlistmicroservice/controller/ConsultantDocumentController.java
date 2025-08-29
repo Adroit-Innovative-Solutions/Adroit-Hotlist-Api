@@ -57,11 +57,12 @@ public class ConsultantDocumentController {
         ApiResponse<List<DocumentDetailsDTO>> apiResponse=new ApiResponse<>(true,"Document Details Fetched",response,null);
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
-    @DeleteMapping("/deleteDocument/{documentId}")
+    @DeleteMapping("/deleteDocument/{documentId}/{userId}")
     public ResponseEntity<ApiResponse<DeleteDocumentDTO>> deleteDocument(
-            @PathVariable long documentId
+            @PathVariable long documentId,
+            @PathVariable String userId
     ){
-       DeleteDocumentDTO response=consultantDocumentService.deleteDocument(documentId);
+       DeleteDocumentDTO response=consultantDocumentService.deleteDocument(documentId,userId);
        ApiResponse<DeleteDocumentDTO> apiResponse=new ApiResponse<>(true,"Document Deleted Successful",response,null);
 
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);

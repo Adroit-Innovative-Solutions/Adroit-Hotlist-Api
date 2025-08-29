@@ -13,7 +13,6 @@ import java.util.List;
 public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpecificationExecutor<Consultant> {
 
 
-
     @Query("SELECT MAX(consultantId) FROM Consultant WHERE consultantId LIKE 'CONS%'")
     String findMaxConsultantId();
 
@@ -24,24 +23,16 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     default Page<Consultant> searchHotlistByUtil(String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
     }
-    Page<Consultant> findByRecruiterId(Pageable pageable,String userId);
 
-    Page<Consultant> findByTeamLeadId(Pageable pageable, String userId);
-
-    default Page<Consultant> searchByRecruiter(String recruiterId, String keyword, Pageable pageable) {
+    default Page<Consultant> consultantsByRecruiter(String recruiterId, String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.recruiterSearch(recruiterId, keyword), pageable);
     }
 
-    default Page<Consultant> searchByTeamLead(String teamLeadId, String keyword, Pageable pageable) {
+    default Page<Consultant> consultantsByTeamLead(String teamLeadId, String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.teamLeadSearch(teamLeadId, keyword), pageable);
     }
-    default Page<Consultant> searchAllConsultants(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return findAll(pageable);
-        }
-        return findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
-    }
-    default Page<Consultant> searchBySalesExecutive(String salesExecutiveId, String keyword, Pageable pageable) {
+
+    default Page<Consultant> consultantsBySalesExecutive(String salesExecutiveId, String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.salesExecutiveSearch(salesExecutiveId, keyword), pageable);
     }
 

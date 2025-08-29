@@ -13,10 +13,13 @@ import org.mapstruct.ReportingPolicy;
 public interface ConsultantMapper {
 
     @Mapping(source = "isAssignAll", target = "isAssignAll")
+    @Mapping(source = "isDeleted",target = "isDeleted")
     ConsultantDto toDTO(Consultant consultant);
 
     @Mapping(source = "isAssignAll", target = "isAssignAll")
+    @Mapping(source="isDeleted",target="isDeleted")
     Consultant toEntity(ConsultantDto dto);
+
     ConsultantAddedResponse toConsultantAddedResponse(Consultant consultant);
 
     DeleteConsultantResponse toDeleteConsultantResponse(Consultant consultant);

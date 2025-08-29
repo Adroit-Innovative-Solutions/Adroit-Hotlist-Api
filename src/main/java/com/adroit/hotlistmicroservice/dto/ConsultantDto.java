@@ -37,6 +37,9 @@ public class ConsultantDto {
     private String marketingVisa;
     private String actualVisa;
     private boolean isAssignAll;
+    private String deletedBy;
+    private boolean isDeleted;
+    private LocalDateTime deletedAt;
 
     public String getMarketingVisa() {
         return marketingVisa;
@@ -291,5 +294,29 @@ public class ConsultantDto {
 
     public void setIsAssignAll(boolean isAssignAll) {
         this.isAssignAll = isAssignAll;
+    }
+
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
+    }
+    public boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 }
