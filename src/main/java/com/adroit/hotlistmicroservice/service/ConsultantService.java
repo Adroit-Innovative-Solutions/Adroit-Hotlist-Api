@@ -245,15 +245,8 @@ public class ConsultantService {
     public Page<ConsultantDto> getAllConsultants(Pageable pageable, String keyword) {
         logger.info("Fetching All Consultants with keyword: {}...", keyword);
 
-        Page<Consultant> list;
+        Page<Consultant> list = consultantRepo.allConsultants(keyword, pageable);
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            list = consultantRepo.findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
-        } else {
-            list = consultantRepo.findAll(pageable);
-        }
-        list.stream()
-                .filter(consultant -> consultant.getIsDeleted()==false);
         Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
         logger.info("Fetched {} consultants with keyword: {}", dtoList.getTotalElements(), keyword);
         return dtoList;

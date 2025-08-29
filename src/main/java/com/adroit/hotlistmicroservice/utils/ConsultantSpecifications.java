@@ -46,9 +46,9 @@ public class ConsultantSpecifications {
     }
 
     public static Specification<Consultant> recruiterSearch(String recruiterId, String keyword) {
-        return Specification.<Consultant>where((root, query, cb) ->
+        return Specification.<Consultant>where(isNotDeleted())
+                .and((root, query, cb) ->
                         cb.or(
-                                cb.isFalse(root.get("isDeleted")),
                                 cb.equal(root.get("recruiterId"), recruiterId),
                                 cb.isTrue(root.get("isAssignAll"))
                         ))
@@ -56,23 +56,30 @@ public class ConsultantSpecifications {
     }
 
     public static Specification<Consultant> teamLeadSearch(String teamLeadId, String keyword) {
-        return Specification.<Consultant>where((root, query, cb) ->
+        return Specification.<Consultant>where(isNotDeleted())
+                .and((root, query, cb) ->
                         cb.or(
-                                cb.isFalse(root.get("isDeleted")),
                                 cb.equal(root.get("teamLeadId"), teamLeadId),
                                 cb.isTrue(root.get("isAssignAll"))
                         ))
                 .and(createSearchSpecification(keyword));
     }
     public static Specification<Consultant> salesExecutiveSearch(String salesExecutiveId,String keyword){
-        return Specification.<Consultant>where((root, query, criteriaBuilder) ->
+        return Specification.<Consultant>where(isNotDeleted())
+                .and((root, query, criteriaBuilder) ->
                     criteriaBuilder.or(
-                            criteriaBuilder.isFalse(root.get("isDeleted")),
                             criteriaBuilder.equal(root.get("salesExecutiveId"),salesExecutiveId),
                             criteriaBuilder.isTrue(root.get("isAssignAll"))
                     ))
                 .and(createSearchSpecification(keyword));
      }
+     public static Specification<Consultant> allConsultantsSearch(String keyword){
+        return Specification.<Consultant>where(isNotDeleted())
+                .and(createSearchSpecification(keyword));
+     }
 
+     public static  Specification<Consultant> isNotDeleted(){
+        return ((root, query, criteriaBuilder) -> criteriaBuilder.isFalse(root.get("isDeleted")));
+     }
 
 }
