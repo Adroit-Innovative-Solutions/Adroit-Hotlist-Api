@@ -48,6 +48,7 @@ public class ConsultantSpecifications {
     public static Specification<Consultant> recruiterSearch(String recruiterId, String keyword) {
         return Specification.<Consultant>where((root, query, cb) ->
                         cb.or(
+                                cb.isFalse(root.get("isDeleted")),
                                 cb.equal(root.get("recruiterId"), recruiterId),
                                 cb.isTrue(root.get("isAssignAll"))
                         ))
@@ -57,6 +58,7 @@ public class ConsultantSpecifications {
     public static Specification<Consultant> teamLeadSearch(String teamLeadId, String keyword) {
         return Specification.<Consultant>where((root, query, cb) ->
                         cb.or(
+                                cb.isFalse(root.get("isDeleted")),
                                 cb.equal(root.get("teamLeadId"), teamLeadId),
                                 cb.isTrue(root.get("isAssignAll"))
                         ))
@@ -65,6 +67,7 @@ public class ConsultantSpecifications {
     public static Specification<Consultant> salesExecutiveSearch(String salesExecutiveId,String keyword){
         return Specification.<Consultant>where((root, query, criteriaBuilder) ->
                     criteriaBuilder.or(
+                            criteriaBuilder.isFalse(root.get("isDeleted")),
                             criteriaBuilder.equal(root.get("salesExecutiveId"),salesExecutiveId),
                             criteriaBuilder.isTrue(root.get("isAssignAll"))
                     ))

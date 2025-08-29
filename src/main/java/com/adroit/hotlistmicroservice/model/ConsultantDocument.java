@@ -28,6 +28,9 @@ public class ConsultantDocument {
     private Consultant consultant;
 
     private LocalDateTime createdAt;
+    private String deletedBy;
+    private boolean isDeleted;
+    private LocalDateTime deletedAt;
 
 
     public LocalDateTime getCreatedAt() {
@@ -85,4 +88,29 @@ public class ConsultantDocument {
     public void setConsultant(Consultant consultant) {
         this.consultant = consultant;
     }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
+    }
+
+    public boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
 }

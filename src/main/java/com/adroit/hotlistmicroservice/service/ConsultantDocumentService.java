@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -55,20 +56,23 @@ public class ConsultantDocumentService {
 
         List<ConsultantDocument> consultantDocument=consultantDocumentRepo.findByConsultant_ConsultantId(consultantId);
         List<DocumentDetailsDTO> documentDetailsDTOS=consultantDocument.stream()
+                .filter(document-> document.getIsDeleted()==false)
                .map(consultantDocumentMapper::toDocumentDTO)
                .collect(Collectors.toList());
 
       return documentDetailsDTOS;
     }
-    public DeleteDocumentDTO deleteDocument(long documentId){
+    public DeleteDocumentDTO deleteDocument(long documentId,String userId){
 
       Optional<ConsultantDocument> optionalConsultantDocument=consultantDocumentRepo.findById(documentId);
     if(optionalConsultantDocument.isEmpty())
       throw new DocumentNotFoundException("No Documents Found With ID :"+documentId);
 
         ConsultantDocument consultantDocument=optionalConsultantDocument.get();
-
-        consultantDocumentRepo.deleteById(documentId);
+          consultantDocument.setIsDeleted(true);
+          consultantDocument.setDeletedBy(userId);
+          consultantDocument.setDeletedAt(LocalDateTime.now());
+        consultantDocumentRepo.save(consultantDocument);
 
         DeleteDocumentDTO response=new DeleteDocumentDTO();
         response.setConsultantId(consultantDocument.getConsultant().getConsultantId());

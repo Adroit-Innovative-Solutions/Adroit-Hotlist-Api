@@ -55,14 +55,14 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllConsultants(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword // ✅ Added keyword parameter
+            @RequestParam(required = false) String keyword
     ){
         Pageable pageable = PageRequest.of(
                 page, size,
                 Sort.Direction.DESC, "updatedTimeStamp"
         );
 
-        Page<ConsultantDto> consultants = consultantService.getAllConsultants(pageable, keyword); // ✅ Updated service call
+        Page<ConsultantDto> consultants = consultantService.getAllConsultants(pageable, keyword);
         PageResponse<ConsultantDto> pageResponse = new PageResponse<>(consultants);
         ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(
                 true, "Consultants data fetched.", pageResponse, null
@@ -84,11 +84,12 @@ public class ConsultantController {
                null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
-    @DeleteMapping("/deleteConsultant/{consultantId}")
+    @DeleteMapping("/deleteConsultant/{consultantId}/{userId}")
     public ApiResponse<DeleteConsultantResponse> deleteConsultantById(
-            @PathVariable String consultantId
+            @PathVariable String consultantId,
+            @PathVariable String userId
     ){
-        DeleteConsultantResponse  response= consultantService.deleteConsultant(consultantId);
+        DeleteConsultantResponse  response= consultantService.deleteConsultant(consultantId,userId);
         ApiResponse<DeleteConsultantResponse> apiResponse=new ApiResponse<>(
                 true,
                 "Consultant Deleted successfully.",

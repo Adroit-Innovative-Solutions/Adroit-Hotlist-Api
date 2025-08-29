@@ -224,14 +224,20 @@ public class ConsultantService {
         return consultantMapper.toConsultantAddedResponse(finalConsultant);
     }
 
-    public DeleteConsultantResponse deleteConsultant(String consultantId){
+    public DeleteConsultantResponse deleteConsultant(String consultantId,String userId){
         logger.info("Deleting the Consultant : {}",consultantId);
+        UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
+        if (user==null) throw new UserNotFoundException("No User Found With ID "+userId);
         Optional<Consultant> optionalConsultant = consultantRepo.findById(consultantId);
         if (optionalConsultant.isEmpty()){
             logger.warn("No Consultant Found With ID : {}",consultantId);
             throw new ConsultantNotFoundException("No Consultant Found With Id "+consultantId);
         }
-        consultantRepo.deleteById(consultantId);
+        Consultant consultant= optionalConsultant.get();
+        consultant.setIsDeleted(true);
+        consultant.setDeletedBy(userId);
+        consultant.setDeletedAt(LocalDateTime.now());
+        consultantRepo.save(consultant);
         logger.warn("Consultant {} is Deleted Successfully",consultantId);
 
         return consultantMapper.toDeleteConsultantResponse(optionalConsultant.get());
@@ -246,7 +252,8 @@ public class ConsultantService {
         } else {
             list = consultantRepo.findAll(pageable);
         }
-
+        list.stream()
+                .filter(consultant -> consultant.getIsDeleted()==false);
         Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
         logger.info("Fetched {} consultants with keyword: {}", dtoList.getTotalElements(), keyword);
         return dtoList;
