@@ -23,6 +23,9 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     default Page<Consultant> searchHotlistByUtil(String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
     }
+    default Page<Consultant> allConsultants(String keyword,Pageable pageable){
+        return findAll(ConsultantSpecifications.allConsultantsSearch(keyword),pageable);
+    }
 
     default Page<Consultant> consultantsByRecruiter(String recruiterId, String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.recruiterSearch(recruiterId, keyword), pageable);
