@@ -57,16 +57,20 @@ public class ConsultantService {
         logger.info("Creating new consultant {}",dto.getName());
         logger.info("Creating new consultant {}",isAssignAll);
         if(dto.getRecruiterId()!=null){
+            logger.info("Recruiter ID :{}",dto.getRecruiterId());
             dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
         }
         if (dto.getTeamLeadId()!=null){
+            logger.info("Team Lead ID :{}",dto.getTeamLeadId());
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
        if(dto.getSalesExecutiveId()!=null){
+           logger.info("Sales Executive ID :{}",dto.getSalesExecutiveId());
            dto.setSalesExecutive(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
        }
         Consultant consultant = consultantMapper.toEntity(dto);
          consultant.setIsAssignAll(isAssignAll);
+         consultant.setMovedToHotlist(false);
         List<Consultant> existedHotList=consultantRepo.findByEmailIdAndPersonalContact(consultant.getEmailId(),consultant.getPersonalContact());
         if(!existedHotList.isEmpty()){
             logger.warn("A consultant with the same email and personal contact already exists in the system");
@@ -361,5 +365,20 @@ public class ConsultantService {
        Page<Consultant> pageableHotList=consultantRepo.consultantsBySalesExecutive(salesExecutiveId,keyword,pageable);
         logger.info("Found {} consultants for SalesExecutive {}",pageableHotList.getTotalElements(),salesExecutiveId);
        return pageableHotList.map(consultantMapper::toDTO);
+    }
+    public Page<ConsultantDto> getYetToOnBoardList(String keyword,Pageable pageable){
+
+        Page<Consultant> pageableYetToOnBoardList=consultantRepo.yetToOnBoardConsultants(keyword,pageable);
+         return pageableYetToOnBoardList.map(consultantMapper::toDTO);
+    }
+    public ConsultantAddedResponse moveToHotlist(String consultantId){
+        Optional<Consultant> optionalConsultant=consultantRepo.findById(consultantId);
+        if(optionalConsultant.isEmpty()){
+            throw new ConsultantNotFoundException("No Consultant Found With ID "+consultantId);
+        }
+        Consultant consultant=optionalConsultant.get();
+        consultant.setMovedToHotlist(true);
+       Consultant savedConsultant=consultantRepo.save(consultant);
+       return consultantMapper.toConsultantAddedResponse(savedConsultant);
     }
 }

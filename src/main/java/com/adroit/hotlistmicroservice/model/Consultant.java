@@ -47,6 +47,7 @@ public class Consultant {
     private LocalDateTime consultantAddedTimeStamp;
     private LocalDateTime updatedTimeStamp;
     private boolean isAssignAll;
+    private boolean movedToHotlist;
     private String deletedBy;
     private boolean isDeleted;
     private LocalDateTime deletedAt;
@@ -337,7 +338,13 @@ public class Consultant {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
+    public boolean getMovedToHotlist() {
+        return movedToHotlist;
+    }
 
+    public void setMovedToHotlist(boolean movedToHotlist) {
+        this.movedToHotlist = movedToHotlist;
+    }
 
 
 }

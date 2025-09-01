@@ -47,6 +47,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> recruiterSearch(String recruiterId, String keyword) {
         return Specification.<Consultant>where(isNotDeleted())
+                .and(isMovedToHotlist())
                 .and((root, query, cb) ->
                         cb.or(
                                 cb.equal(root.get("recruiterId"), recruiterId),
@@ -57,6 +58,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> teamLeadSearch(String teamLeadId, String keyword) {
         return Specification.<Consultant>where(isNotDeleted())
+                .and(isMovedToHotlist())
                 .and((root, query, cb) ->
                         cb.or(
                                 cb.equal(root.get("teamLeadId"), teamLeadId),
@@ -66,6 +68,7 @@ public class ConsultantSpecifications {
     }
     public static Specification<Consultant> salesExecutiveSearch(String salesExecutiveId,String keyword){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(isMovedToHotlist())
                 .and((root, query, criteriaBuilder) ->
                     criteriaBuilder.or(
                             criteriaBuilder.equal(root.get("salesExecutiveId"),salesExecutiveId),
@@ -75,11 +78,22 @@ public class ConsultantSpecifications {
      }
      public static Specification<Consultant> allConsultantsSearch(String keyword){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(isMovedToHotlist())
                 .and(createSearchSpecification(keyword));
      }
 
      public static  Specification<Consultant> isNotDeleted(){
         return ((root, query, criteriaBuilder) -> criteriaBuilder.isFalse(root.get("isDeleted")));
-     }
+    }
+    public static Specification<Consultant> isMovedToHotlist(){
+        return ((root, query, criteriaBuilder) ->
+                criteriaBuilder.isTrue(root.get("movedToHotlist")));
+    }
+    public static Specification<Consultant> yetToOnBoardConsultants(String keyword){
+        return Specification.<Consultant>where(isNotDeleted())
+                .and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.or(criteriaBuilder.isFalse(root.get("movedToHotlist"))))
+                .and(createSearchSpecification(keyword));
+    }
 
 }
