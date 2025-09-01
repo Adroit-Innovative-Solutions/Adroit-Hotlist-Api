@@ -38,5 +38,8 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     default Page<Consultant> consultantsBySalesExecutive(String salesExecutiveId, String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.salesExecutiveSearch(salesExecutiveId, keyword), pageable);
     }
+    default Page<Consultant> yetToOnBoardConsultants(String keyword, Pageable pageable) {
+        return findAll(ConsultantSpecifications.yetToOnBoardConsultants(keyword),pageable);
+    }
 
 }

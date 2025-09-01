@@ -12,6 +12,8 @@ public class ConsultantAddedResponse {
 
     private LocalDateTime consultantAddedTimeStamp;
 
+    private boolean movedToHotlist;
+
     public String getConsultantId() {
         return consultantId;
     }
@@ -43,5 +45,12 @@ public class ConsultantAddedResponse {
 
     public void setConsultantAddedTimeStamp(LocalDateTime consultantAddedTimeStamp) {
         this.consultantAddedTimeStamp = consultantAddedTimeStamp;
+    }
+    public boolean getMovedToHotlist() {
+        return movedToHotlist;
+    }
+
+    public void setMovedToHotlist(boolean movedToHotlist) {
+        this.movedToHotlist = movedToHotlist;
     }
 }

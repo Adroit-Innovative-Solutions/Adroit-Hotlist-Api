@@ -37,6 +37,7 @@ public class ConsultantDto {
     private String marketingVisa;
     private String actualVisa;
     private boolean isAssignAll;
+    private boolean movedToHotlist;
     private String deletedBy;
     private boolean isDeleted;
     private LocalDateTime deletedAt;
@@ -318,5 +319,12 @@ public class ConsultantDto {
 
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
+    }
+    public boolean getMovedToHotlist() {
+        return movedToHotlist;
+    }
+
+    public void setMovedToHotlist(boolean movedToHotlist) {
+        this.movedToHotlist = movedToHotlist;
     }
 }
