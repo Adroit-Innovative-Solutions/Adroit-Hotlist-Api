@@ -55,19 +55,21 @@ public class ConsultantService {
     }
     public ConsultantAddedResponse addConsultant(ConsultantDto dto, List<MultipartFile> resumes, List<MultipartFile> documents,boolean isAssignAll) throws IOException {
         logger.info("Creating new consultant {}",dto.getName());
-        logger.info("Creating new consultant {}",isAssignAll);
-        if(dto.getRecruiterId()!=null || !dto.getRecruiterId().isEmpty()){
-            logger.info("Recruiter ID :{}",dto.getRecruiterId());
+        logger.info("Recruiter ID :{}",dto.getRecruiterId());
+        if(dto.getRecruiterId() != null && !dto.getRecruiterId().isEmpty() && !dto.getRecruiterId().isBlank()) {
+            logger.info("Recruiter ID :{}", dto.getRecruiterId());
             dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
         }
-        if (dto.getTeamLeadId()!=null || !dto.getTeamLeadId().isEmpty()){
-            logger.info("Team Lead ID :{}",dto.getTeamLeadId());
+
+        if (dto.getTeamLeadId() != null && !dto.getTeamLeadId().isEmpty() && !dto.getTeamLeadId().isBlank()) {
+            logger.info("Team Lead ID :{}", dto.getTeamLeadId());
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
-       if(dto.getSalesExecutiveId()!=null || !dto.getSalesExecutiveId().isEmpty()){
-           logger.info("Sales Executive ID :{}",dto.getSalesExecutiveId());
-           dto.setSalesExecutive(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
-       }
+
+        if(dto.getSalesExecutiveId() != null && !dto.getSalesExecutiveId().isEmpty() && !dto.getSalesExecutiveId().isBlank()) {
+            logger.info("Sales Executive ID :{}", dto.getSalesExecutiveId());
+            dto.setSalesExecutive(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
+        }
         Consultant consultant = consultantMapper.toEntity(dto);
          consultant.setIsAssignAll(isAssignAll);
          consultant.setMovedToHotlist(false);
