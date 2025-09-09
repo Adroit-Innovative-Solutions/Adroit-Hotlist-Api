@@ -12,6 +12,7 @@ import com.adroit.hotlistmicroservice.model.ConsultantDocument;
 import com.adroit.hotlistmicroservice.repo.ConsultantDocumentRepo;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.utils.ConsultantSpecifications;
+import jakarta.transaction.Transactional;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -53,73 +52,179 @@ public class ConsultantService {
         }
         return String.format("CONS%05d",nextNum);
     }
-    public ConsultantAddedResponse addConsultant(ConsultantDto dto, List<MultipartFile> resumes, List<MultipartFile> documents,boolean isAssignAll) throws IOException {
-        logger.info("Creating new consultant {}",dto.getName());
-        logger.info("Recruiter ID :{}",dto.getRecruiterId());
-        if(dto.getRecruiterId() != null && !dto.getRecruiterId().isEmpty() && !dto.getRecruiterId().isBlank()) {
-            logger.info("Recruiter ID :{}", dto.getRecruiterId());
-            dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
-        }
+    @Transactional
+    public ConsultantAddedResponse addConsultant(ConsultantDto dto, List<MultipartFile> resumes,
+                                                 List<MultipartFile> documents, boolean isAssignAll) throws IOException {
+        logger.info("Creating new consultant {}", dto.getName());
 
-        if (dto.getTeamLeadId() != null && !dto.getTeamLeadId().isEmpty() && !dto.getTeamLeadId().isBlank()) {
-            logger.info("Team Lead ID :{}", dto.getTeamLeadId());
-            dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
-        }
+        setUserNamesFromService(dto);
+        validateExistingConsultants(dto);
 
-        if(dto.getSalesExecutiveId() != null && !dto.getSalesExecutiveId().isEmpty() && !dto.getSalesExecutiveId().isBlank()) {
-            logger.info("Sales Executive ID :{}", dto.getSalesExecutiveId());
-            dto.setSalesExecutive(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
+        Consultant consultantToSave = prepareConsultantForSave(dto, isAssignAll);
+        consultantToSave = saveConsultantWithDocuments(consultantToSave, resumes, documents);
+
+        logger.info("Consultant {} Successfully with ID: {}",
+                consultantToSave.getConsultantId().startsWith("RESTORED_") ? "Restored" : "Created",
+                consultantToSave.getConsultantId());
+
+        return consultantMapper.toConsultantAddedResponse(consultantToSave);
+    }
+
+    private void setUserNamesFromService(ConsultantDto dto) {
+        try {
+            if (isValidUserId(dto.getRecruiterId())) {
+                String recruiterName = getUserName(dto.getRecruiterId());
+                dto.setRecruiterName(recruiterName);
+                logger.info("Recruiter ID: {}, Name: {}", dto.getRecruiterId(), recruiterName);
+            }
+
+            if (isValidUserId(dto.getTeamLeadId())) {
+                String teamLeadName = getUserName(dto.getTeamLeadId());
+                dto.setTeamleadName(teamLeadName);
+                logger.info("Team Lead ID: {}, Name: {}", dto.getTeamLeadId(), teamLeadName);
+            }
+
+            if (isValidUserId(dto.getSalesExecutiveId())) {
+                String salesExecName = getUserName(dto.getSalesExecutiveId());
+                dto.setSalesExecutive(salesExecName);
+                logger.info("Sales Executive ID: {}, Name: {}", dto.getSalesExecutiveId(), salesExecName);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to fetch user names from user service", e);
         }
+    }
+
+    private boolean isValidUserId(String userId) {
+        return userId != null && !userId.trim().isEmpty();
+    }
+
+    private String getUserName(String userId) {
+        try {
+            ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(userId);
+            if (response != null && response.getBody() != null && response.getBody().getData() != null) {
+                return response.getBody().getData().getUserName();
+            }
+        } catch (Exception e) {
+            logger.error("Error fetching user details for ID: {}", userId, e);
+        }
+        return "Unknown";
+    }
+
+    private void validateExistingConsultants(ConsultantDto dto) {
+        List<Consultant> existingConsultants = consultantRepo.findByEmailIdAndPersonalContact(
+                dto.getEmailId(), dto.getPersonalContact());
+
+        List<Consultant> activeConsultants = filterActiveConsultants(existingConsultants);
+
+        if (!activeConsultants.isEmpty()) {
+            logger.warn("Active consultant already exists with email: {} and contact: {}",
+                    dto.getEmailId(), dto.getPersonalContact());
+            throw new ConsultantAlreadyExistsException("An active consultant with the same email and personal contact already exists.");
+        }
+    }
+
+    private List<Consultant> filterActiveConsultants(List<Consultant> consultants) {
+        if (consultants == null) return Collections.emptyList();
+
+        return consultants.stream()
+                .filter(Objects::nonNull)
+                .filter(consultant -> !consultant.getIsDeleted())
+                .collect(Collectors.toList());
+    }
+
+    private Consultant prepareConsultantForSave(ConsultantDto dto, boolean isAssignAll) {
+        List<Consultant> existingConsultants = consultantRepo.findByEmailIdAndPersonalContact(
+                dto.getEmailId(), dto.getPersonalContact());
+
+        List<Consultant> softDeletedConsultants = filterSoftDeletedConsultants(existingConsultants);
+
+        if (!softDeletedConsultants.isEmpty()) {
+            return restoreSoftDeletedConsultant(softDeletedConsultants.get(0), dto, isAssignAll);
+        } else {
+            return createNewConsultant(dto, isAssignAll);
+        }
+    }
+
+    private List<Consultant> filterSoftDeletedConsultants(List<Consultant> consultants) {
+        if (consultants == null) return Collections.emptyList();
+
+        return consultants.stream()
+                .filter(Objects::nonNull)
+                .filter(Consultant::getIsDeleted)
+                .collect(Collectors.toList());
+    }
+
+    private Consultant restoreSoftDeletedConsultant(Consultant deletedConsultant, ConsultantDto dto, boolean isAssignAll) {
+        logger.info("Restoring soft-deleted consultant ID: {}", deletedConsultant.getConsultantId());
+
+        consultantMapper.updateConsultantFromDto(dto, deletedConsultant);
+
+        deletedConsultant.setIsDeleted(false);
+        deletedConsultant.setDeletedAt(null);
+        deletedConsultant.setDeletedBy(null);
+        deletedConsultant.setUpdatedTimeStamp(LocalDateTime.now());
+        deletedConsultant.setIsAssignAll(isAssignAll);
+        deletedConsultant.setMovedToHotlist(false);
+
+        return deletedConsultant;
+    }
+
+    private Consultant createNewConsultant(ConsultantDto dto, boolean isAssignAll) {
+        logger.info("Creating new consultant");
+
         Consultant consultant = consultantMapper.toEntity(dto);
-         consultant.setIsAssignAll(isAssignAll);
-         consultant.setMovedToHotlist(false);
-        List<Consultant> existedHotList=consultantRepo.findByEmailIdAndPersonalContact(consultant.getEmailId(),consultant.getPersonalContact());
-        if(!existedHotList.isEmpty()){
-            logger.warn("A consultant with the same email and personal contact already exists in the system");
-            throw new ConsultantAlreadyExistsException("A consultant with the same email and personal contact already exists in the system.");
-        }
+        consultant.setIsAssignAll(isAssignAll);
+        consultant.setMovedToHotlist(false);
         consultant.setConsultantId(generateConsultantId());
         consultant.setConsultantAddedTimeStamp(LocalDateTime.now());
         consultant.setUpdatedTimeStamp(LocalDateTime.now());
 
-        // saving without documents
-        consultantRepo.save(consultant);
+        return consultant;
+    }
 
-        Tika tika=new Tika();
-        // Saving Resume as BLOB
-        if(resumes!=null) {
-            if (!resumes.isEmpty()) {
-                for (MultipartFile resume : resumes) {
-                    if (!resume.isEmpty())
-                    {
-                        FileValidator.validateStrictFile(resume);
-                        String mimeType = FileValidator.mapFileNameToFileType(resume.getOriginalFilename());
-                        logger.info("Resume File Mime Type {}", tika.detect(resume.getInputStream()));
-                        ConsultantDocument doc = saveDocument(resume, "RESUME", mimeType, consultant);
-                        consultant.getDocuments().add(doc);
-                    }
+    private Consultant saveConsultantWithDocuments(Consultant consultant, List<MultipartFile> resumes,
+                                                   List<MultipartFile> documents) throws IOException {
+        // Save consultant first (without documents)
+        Consultant savedConsultant = consultantRepo.save(consultant);
+
+        // Initialize documents list if null
+        if (savedConsultant.getDocuments() == null) {
+            savedConsultant.setDocuments(new ArrayList<>());
+        }
+
+        // Process and save resumes
+        processAndSaveFiles(resumes, "RESUME", savedConsultant);
+
+        // Process and save documents
+        processAndSaveFiles(documents, "DOCUMENT", savedConsultant);
+
+        // Save again with documents
+        return consultantRepo.save(savedConsultant);
+    }
+
+    private void processAndSaveFiles(List<MultipartFile> files, String documentType, Consultant consultant) throws IOException {
+        if (files == null || files.isEmpty()) {
+            return;
+        }
+
+        Tika tika = new Tika();
+
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                try {
+                    FileValidator.validateStrictFile(file);
+                    String mimeType = FileValidator.mapFileNameToFileType(file.getOriginalFilename());
+                    logger.info("{} File Mime Type: {}", documentType, tika.detect(file.getInputStream()));
+
+                    ConsultantDocument doc =saveDocument(file, documentType, mimeType, consultant);
+                    consultant.getDocuments().add(doc);
+
+                } catch (IOException e) {
+                    logger.error("Error processing {} file: {}", documentType, file.getOriginalFilename(), e);
+                    throw e;
                 }
             }
         }
-        if(documents!=null) {
-            if (!documents.isEmpty()) {
-                // Saving Documents as BLOB
-                for (MultipartFile document : documents) {
-                    if (!document.isEmpty()) {
-                        FileValidator.validateStrictFile(document);
-                        String mimeType = FileValidator.mapFileNameToFileType(document.getOriginalFilename());
-                        logger.info("Document MimeType : {}", tika.detect(document.getInputStream()));
-                        ConsultantDocument doc = saveDocument(document, "DOCUMENT", mimeType, consultant);
-                        consultant.getDocuments().add(doc);
-                    }
-                }
-            }
-        }
-        // Save again to update with documents
-        Consultant savedConsultant=consultantRepo.save(consultant);
-        logger.info("Consultant Created Successfully {}",savedConsultant.getConsultantId());
-
-        return consultantMapper.toConsultantAddedResponse(savedConsultant);
     }
     public ConsultantDocument saveDocument(MultipartFile file,String documentType,String fileType,Consultant consultant)
             throws IOException {
@@ -248,9 +353,28 @@ public class ConsultantService {
         consultant.setDeletedBy(userId);
         consultant.setDeletedAt(LocalDateTime.now());
         consultantRepo.save(consultant);
+
+        // Soft delete all associated documents
+        softDeleteAllConsultantDocuments(consultantId, userId);
+
         logger.warn("Consultant {} is Deleted Successfully",consultantId);
 
         return consultantMapper.toDeleteConsultantResponse(optionalConsultant.get());
+    }
+    private void softDeleteAllConsultantDocuments(String consultantId, String deletedBy) {
+        List<ConsultantDocument> documents = consultantDocumentRepo.findByConsultant_ConsultantIdAndIsDeletedFalse(consultantId);
+
+        if (documents != null && !documents.isEmpty()) {
+            for (ConsultantDocument document : documents) {
+                document.setIsDeleted(true);
+                document.setDeletedAt(LocalDateTime.now());
+                document.setDeletedBy(deletedBy);
+            }
+            consultantDocumentRepo.saveAll(documents);
+            logger.info("Soft deleted {} documents for consultant {}", documents.size(), consultantId);
+        } else {
+            logger.info("No active documents found to delete for consultant {}", consultantId);
+        }
     }
     public Page<ConsultantDto> getAllConsultants(Pageable pageable, String keyword) {
         logger.info("Fetching All Consultants with keyword: {}...", keyword);

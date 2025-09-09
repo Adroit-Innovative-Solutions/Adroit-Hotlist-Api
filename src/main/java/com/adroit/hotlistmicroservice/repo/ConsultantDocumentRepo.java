@@ -11,4 +11,5 @@ public interface ConsultantDocumentRepo extends JpaRepository<ConsultantDocument
     List<ConsultantDocument> findByConsultant_ConsultantId(String consultantId);
 
 
+    List<ConsultantDocument> findByConsultant_ConsultantIdAndIsDeletedFalse(String consultantId);
 }
