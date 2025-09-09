@@ -189,10 +189,14 @@ public class ConsultantService {
             existingConsultant.setMarketingStartDate(updatedConsultant.getMarketingStartDate());
         if (updatedConsultant.getRemarks() != null)
             existingConsultant.setRemarks(updatedConsultant.getRemarks());
+        if(updatedConsultant.getRecruiterName()!=null)
+            existingConsultant.setRecruiterName(updatedConsultant.getRecruiterName());
+        if(updatedConsultant.getTeamleadName()!=null)
+            existingConsultant.setTeamleadName(updatedConsultant.getTeamleadName());
 
-            existingConsultant.setIsAssignAll(updatedConsultant.getIsAssignAll());
+        existingConsultant.setIsAssignAll(updatedConsultant.getIsAssignAll());
 
-            existingConsultant.setUpdatedTimeStamp(LocalDateTime.now());
+        existingConsultant.setUpdatedTimeStamp(LocalDateTime.now());
 
         return existingConsultant;
     }
@@ -212,13 +216,13 @@ public class ConsultantService {
                 throw new ConsultantAlreadyExistsException("A consultant with the same email and personal contact already exists in the system.");
             }
         }
-        if(dto.getRecruiterId()!=null){
+        if(dto.getRecruiterId()!=null && !dto.getRecruiterId().isEmpty()){
             dto.setRecruiterName(userServiceClient.getUserByUserID(dto.getRecruiterId()).getBody().getData().getUserName());
         }
-        if (dto.getTeamLeadId()!=null){
+        if (dto.getTeamLeadId()!=null && !dto.getTeamLeadId().isEmpty()){
             dto.setTeamleadName(userServiceClient.getUserByUserID(dto.getTeamLeadId()).getBody().getData().getUserName());
         }
-        if(dto.getSalesExecutiveId()!=null){
+        if(dto.getSalesExecutiveId()!=null && !dto.getSalesExecutiveId().isEmpty()){
             dto.setSalesExecutive(userServiceClient.getUserByUserID(dto.getSalesExecutiveId()).getBody().getData().getUserName());
         }
         Consultant existingConsultant=optionalConsultant.get();
