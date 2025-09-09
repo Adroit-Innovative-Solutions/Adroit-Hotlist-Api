@@ -18,8 +18,8 @@ public class FileValidator {
                 "application/msword" // DOC
         );
 
-        // Max file size: 10MB
-        private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+        // Max file size: 20MB
+        private static final long MAX_FILE_SIZE = 20 * 1024 * 1024;
 
         public static void validateStrictFile(MultipartFile file) {
             if (file.isEmpty()) {
@@ -32,7 +32,7 @@ public class FileValidator {
         private static void validateFileSize(MultipartFile file) {
             if (file.getSize() > MAX_FILE_SIZE) {
                 throw new MaxUploadSizeExceededException(
-                        "File size exceeds 10MB limit. Actual size: " +
+                        "File size exceeds 20MB limit. Actual size: " +
                                 (file.getSize() / (1024 * 1024)) + "MB"
                 );
             }
