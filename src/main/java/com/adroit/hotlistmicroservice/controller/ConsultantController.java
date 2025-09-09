@@ -45,7 +45,7 @@ public class ConsultantController {
             @RequestParam(value = "isAssignAll", required = false, defaultValue = "false") boolean isAssignAll
     ) throws IOException {
 
-        logger.info("resumes ------------------------>>:: {}",resumes);
+        logger.info("In Coming Request For New Adding Consultant");
         ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList, resumes, documents,isAssignAll);
         ApiResponse<ConsultantAddedResponse> response=new ApiResponse<>(true,"Consultant Created",consultantResponse,null);
 
@@ -57,6 +57,7 @@ public class ConsultantController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword
     ){
+        logger.info("In Coming Request For Fetching All Consultants..page {} size {} keyword {}",page,size,keyword);
         Pageable pageable = PageRequest.of(
                 page, size,
                 Sort.Direction.DESC, "updatedTimeStamp"
@@ -76,6 +77,7 @@ public class ConsultantController {
             @PathVariable String consultantId,
             @RequestBody ConsultantDto consultantDto
     ){
+        logger.info("In Coming Request For Updating Consultant for ID {}",consultantId);
        ConsultantAddedResponse response= consultantService.updateConsultant(consultantId,consultantDto);
        ApiResponse<ConsultantAddedResponse> apiResponse=new ApiResponse<>(
                true,
@@ -89,6 +91,7 @@ public class ConsultantController {
             @PathVariable String consultantId,
             @PathVariable String userId
     ){
+        logger.info("In Coming Request For Deleting Consultant {}",consultantId);
         DeleteConsultantResponse  response= consultantService.deleteConsultant(consultantId,userId);
         ApiResponse<DeleteConsultantResponse> apiResponse=new ApiResponse<>(
                 true,
@@ -105,6 +108,7 @@ public class ConsultantController {
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size
     ){
+        logger.info("In Coming Request For Fetching Consultant : {}",consultantId);
         ConsultantDto hotList= consultantService.getConsultantByID(consultantId);
         ApiResponse<ConsultantDto> response=new ApiResponse<>(true,"HotList data fetched.",hotList,null);
 
