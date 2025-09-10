@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
+import java.util.Map;
 
 public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpecificationExecutor<Consultant> {
 
@@ -23,23 +24,23 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     default Page<Consultant> searchHotlistByUtil(String keyword, Pageable pageable) {
         return findAll(ConsultantSpecifications.createSearchSpecification(keyword), pageable);
     }
-    default Page<Consultant> allConsultants(String keyword,Pageable pageable){
-        return findAll(ConsultantSpecifications.allConsultantsSearch(keyword),pageable);
+    default Page<Consultant> allConsultants(String keyword, Map<String,Object> filters,Pageable pageable){
+        return findAll(ConsultantSpecifications.allConsultantsSearch(keyword,filters),pageable);
     }
 
-    default Page<Consultant> consultantsByRecruiter(String recruiterId, String keyword, Pageable pageable) {
-        return findAll(ConsultantSpecifications.recruiterSearch(recruiterId, keyword), pageable);
+    default Page<Consultant> consultantsByRecruiter(String recruiterId, String keyword, Map<String,Object> filters,Pageable pageable) {
+        return findAll(ConsultantSpecifications.recruiterSearch(recruiterId, keyword,filters), pageable);
     }
 
-    default Page<Consultant> consultantsByTeamLead(String teamLeadId, String keyword, Pageable pageable) {
-        return findAll(ConsultantSpecifications.teamLeadSearch(teamLeadId, keyword), pageable);
+    default Page<Consultant> consultantsByTeamLead(String teamLeadId, String keyword,Map<String,Object> filters, Pageable pageable) {
+        return findAll(ConsultantSpecifications.teamLeadSearch(teamLeadId, keyword,filters), pageable);
     }
 
-    default Page<Consultant> consultantsBySalesExecutive(String salesExecutiveId, String keyword, Pageable pageable) {
-        return findAll(ConsultantSpecifications.salesExecutiveSearch(salesExecutiveId, keyword), pageable);
+    default Page<Consultant> consultantsBySalesExecutive(String salesExecutiveId, String keyword,Map<String,Object> filters, Pageable pageable) {
+        return findAll(ConsultantSpecifications.salesExecutiveSearch(salesExecutiveId, keyword,filters), pageable);
     }
-    default Page<Consultant> yetToOnBoardConsultants(String keyword, Pageable pageable) {
-        return findAll(ConsultantSpecifications.yetToOnBoardConsultants(keyword),pageable);
+    default Page<Consultant> yetToOnBoardConsultants(String keyword,Map<String,Object> filters, Pageable pageable) {
+        return findAll(ConsultantSpecifications.yetToOnBoardConsultants(keyword,filters),pageable);
     }
 
 }

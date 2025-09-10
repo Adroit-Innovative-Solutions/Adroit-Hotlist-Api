@@ -83,6 +83,7 @@ public class ConsultantDocumentService {
 
     public DocumentAddedResponse addDocument(String consultantId, List<MultipartFile> resumes, List<MultipartFile> documents) throws IOException {
 
+        log.info("Request for Adding Documents .......");
         Optional<Consultant> optionalConsultant = consultantRepo.findById(consultantId);
         Consultant consultant = optionalConsultant.get();
 

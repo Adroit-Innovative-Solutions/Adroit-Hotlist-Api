@@ -2,10 +2,8 @@ package com.adroit.hotlistmicroservice.controller;
 
 import com.adroit.hotlistmicroservice.client.UserServiceClient;
 import com.adroit.hotlistmicroservice.dto.*;
-import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.service.ConsultantService;
-import org.apache.catalina.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = {"http://35.188.150.92", "http://192.168.0.140:3000", "http://192.168.0.139:3000","https://mymulya.com","http://localhost:3000","http://192.168.0.135:8080","http://192.168.0.135",
         "http://182.18.177.16","http://192.168.1.151:3000"})
@@ -55,15 +54,16 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllConsultants(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword
-    ){
+            @RequestParam(required = false) String keyword,
+            @RequestParam Map<String,Object> filters
+            ){
         logger.info("In Coming Request For Fetching All Consultants..page {} size {} keyword {}",page,size,keyword);
         Pageable pageable = PageRequest.of(
                 page, size,
                 Sort.Direction.DESC, "updatedTimeStamp"
         );
 
-        Page<ConsultantDto> consultants = consultantService.getAllConsultants(pageable, keyword);
+        Page<ConsultantDto> consultants = consultantService.getAllConsultants(keyword,filters,pageable);
         PageResponse<ConsultantDto> pageResponse = new PageResponse<>(consultants);
         ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(
                 true, "Consultants data fetched.", pageResponse, null
@@ -140,13 +140,14 @@ public class ConsultantController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
+            @RequestParam Map<String,Object> filters,
             @PathVariable String userId
     ){
         Pageable pageable=PageRequest.of(
                 page,
                 size,
                 Sort.Direction.DESC,"updatedTimeStamp");
-       Page<ConsultantDto> response=consultantService.getConsultantsByUserId(pageable,userId,keyword);
+       Page<ConsultantDto> response=consultantService.getConsultantsByRecruiterId(pageable,userId,keyword,filters);
         PageResponse<ConsultantDto> pageResponse=new PageResponse<>(response);
        ApiResponse<PageResponse<ConsultantDto>> apiResponse=new ApiResponse<>(true,"Consultant Data Fetched",pageResponse,null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
@@ -162,6 +163,7 @@ public class ConsultantController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
+            @RequestParam Map<String,Object> filters,
             @PathVariable String userId
 
     ){
@@ -170,7 +172,7 @@ public class ConsultantController {
                 size,
                 Sort.Direction.DESC,"updatedTimeStamp");
 
-       Page<ConsultantDto> response=consultantService.getTeamConsultants(pageable,userId,keyword);
+       Page<ConsultantDto> response=consultantService.getTeamConsultants(pageable,userId,keyword,filters);
         PageResponse<ConsultantDto> pageResponse=new PageResponse<>(response);
        ApiResponse<PageResponse<ConsultantDto>> apiResponse=new ApiResponse<>(true,"HotList Data Fetched",pageResponse,null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
@@ -197,12 +199,13 @@ public class ConsultantController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
+            @RequestParam Map<String,Object> filters,
             @PathVariable String userId
     ){
         Pageable pageable=PageRequest.of(page,
                 size,
                 Sort.Direction.DESC,"updatedTimeStamp");
-        Page<ConsultantDto> pageResponse=consultantService.getSalesExecutiveConsultants(userId,keyword,pageable);
+        Page<ConsultantDto> pageResponse=consultantService.getSalesExecutiveConsultants(userId,keyword,pageable,filters);
         PageResponse<ConsultantDto> response=new PageResponse<>(pageResponse);
         ApiResponse apiResponse=new ApiResponse<>(true,"Fetched Sales Executive Consultants",response,null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
@@ -211,10 +214,11 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getYetOnBoardConsultants(
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size,
-            @RequestParam (required = false) String keyword
+            @RequestParam (required = false) String keyword,
+            @RequestParam Map<String,Object> filters
     ){
         Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedTimeStamp");
-        Page<ConsultantDto> pageResponse=consultantService.getYetToOnBoardList(keyword,pageable);
+        Page<ConsultantDto> pageResponse=consultantService.getYetToOnBoardList(keyword,pageable,filters);
         PageResponse<ConsultantDto> response=new PageResponse<>(pageResponse);
         ApiResponse apiResponse=new ApiResponse(true,"Fetched Yet On Board Consultants",response,null);
     return new ResponseEntity<>(apiResponse,HttpStatus.OK);
