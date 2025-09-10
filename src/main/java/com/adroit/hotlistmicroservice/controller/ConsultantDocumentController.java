@@ -74,6 +74,7 @@ public class ConsultantDocumentController {
             @RequestParam(value = "documents",required = false) List<MultipartFile> documents
             ) throws IOException {
 
+        log.info("In coming request for uploading documents ID {}",consultantId);
         DocumentAddedResponse response=consultantDocumentService.addDocument(consultantId,resumes,documents);
 
         ApiResponse<DocumentAddedResponse> apiResponse=new ApiResponse<>(true,"New Documents Added",response,null);
