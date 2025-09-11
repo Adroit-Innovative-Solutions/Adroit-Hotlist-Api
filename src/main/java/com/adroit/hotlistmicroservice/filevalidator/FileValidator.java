@@ -19,7 +19,7 @@ public class FileValidator {
         );
 
         // Max file size: 20MB
-        private static final long MAX_FILE_SIZE = 20 * 1024 * 1024;
+        private static final long MAX_FILE_SIZE = 60 * 1024 * 1024;
 
         public static void validateStrictFile(MultipartFile file) {
             if (file.isEmpty()) {
