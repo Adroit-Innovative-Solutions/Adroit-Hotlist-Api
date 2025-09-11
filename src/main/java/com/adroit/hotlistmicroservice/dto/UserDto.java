@@ -2,6 +2,7 @@ package com.adroit.hotlistmicroservice.dto;
 
 import lombok.Data;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -23,6 +24,7 @@ public class UserDto {
        private String entity;
        private String associatedTeamLeadId;
        private String teamName;
+       private List<TeamAssignment> teamAssignments;
 
     public String getAssociatedTeamLeadId() {
         return associatedTeamLeadId;
@@ -150,5 +152,13 @@ public class UserDto {
 
     public void setEntity(String entity) {
         this.entity = entity;
+    }
+
+    public List<TeamAssignment> getTeamAssignments() {
+        return teamAssignments;
+    }
+
+    public void setTeamAssignments(List<TeamAssignment> teamAssignments) {
+        this.teamAssignments = teamAssignments;
     }
 }

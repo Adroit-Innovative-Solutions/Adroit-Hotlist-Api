@@ -462,7 +462,7 @@ public class ConsultantService {
           if(isTeamLead) {
                pageableHotList = consultantRepo.consultantsByTeamLead(userId, keyword,filters ,pageable);
           }else {
-              String teamLeadId=user.getAssociatedTeamLeadId();
+              String teamLeadId=user.getTeamAssignments().getFirst().getTeamLeadId();
                pageableHotList = consultantRepo.consultantsByTeamLead(teamLeadId, keyword,filters, pageable);
           }
         Page<ConsultantDto> hotListDtoPage=pageableHotList.map(consultantMapper::toDTO);
