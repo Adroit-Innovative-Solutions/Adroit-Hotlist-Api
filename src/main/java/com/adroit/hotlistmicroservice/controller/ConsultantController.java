@@ -136,7 +136,7 @@ public class ConsultantController {
 //        consultantService.getEmployeeDetailsByRole(role);
 //    }
     @GetMapping("/consultantsByUserId/{userId}")
-    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> consultantsByUserId(
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> recruiterConsultants(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
@@ -230,6 +230,14 @@ public class ConsultantController {
        ConsultantAddedResponse response=consultantService.moveToHotlist(consultantId);
        ApiResponse<ConsultantAddedResponse> apiResponse=new ApiResponse<>(true,"Consultant Moved To Hotlist",response,null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+   @PatchMapping("/moveToYetToOnBoard/{consultantId}")
+   public ResponseEntity<ApiResponse<ConsultantAddedResponse>> moveToYetToOnBoard(
+           @PathVariable String consultantId
+   ){
+        ConsultantAddedResponse response=consultantService.moveToYetToOnBoard(consultantId);
+        ApiResponse<ConsultantAddedResponse> apiResponse=new ApiResponse<>(true,"Consultant Moved To YetToOnBoard",response,null);
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
 
 }
