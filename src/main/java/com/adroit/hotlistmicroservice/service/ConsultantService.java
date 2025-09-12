@@ -509,4 +509,14 @@ public class ConsultantService {
        Consultant savedConsultant=consultantRepo.save(consultant);
        return consultantMapper.toConsultantAddedResponse(savedConsultant);
     }
+    public ConsultantAddedResponse moveToYetToOnBoard(String consultantId){
+        Optional<Consultant> optionalConsultant=consultantRepo.findById(consultantId);
+        if(optionalConsultant.isEmpty()){
+            throw new ConsultantNotFoundException("No Consultant Found With ID "+consultantId);
+        }
+        Consultant consultant=optionalConsultant.get();
+        consultant.setMovedToHotlist(false);
+        Consultant savedConsultant=consultantRepo.save(consultant);
+        return consultantMapper.toConsultantAddedResponse(savedConsultant);
+    }
 }
