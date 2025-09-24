@@ -1,10 +1,12 @@
 package com.adroit.hotlistmicroservice.service;
 
 import com.adroit.hotlistmicroservice.client.UserServiceClient;
+import com.adroit.hotlistmicroservice.config.EmailNotificationUtil;
 import com.adroit.hotlistmicroservice.dto.*;
 import com.adroit.hotlistmicroservice.exception.ConsultantAlreadyExistsException;
 import com.adroit.hotlistmicroservice.exception.ConsultantNotFoundException;
 import com.adroit.hotlistmicroservice.exception.UserNotFoundException;
+import com.adroit.hotlistmicroservice.exception.UserRoleNotAssignedException;
 import com.adroit.hotlistmicroservice.filevalidator.FileValidator;
 import com.adroit.hotlistmicroservice.mapper.ConsultantMapper;
 import com.adroit.hotlistmicroservice.model.Consultant;
@@ -39,6 +41,8 @@ public class ConsultantService {
      ConsultantDocumentRepo consultantDocumentRepo;
      @Autowired
      private ConsultantMapper consultantMapper;
+     @Autowired
+    EmailNotificationUtil emailNotificationUtil;
 
     public static final Logger logger= LoggerFactory.getLogger(ConsultantService.class);
 
@@ -65,8 +69,11 @@ public class ConsultantService {
                 consultantToSave.getConsultantId().startsWith("RESTORED_") ? "Restored" : "Created",
                 consultantToSave.getConsultantId());
 
+
+
         return consultantMapper.toConsultantAddedResponse(consultantToSave);
     }
+
 
     private void setUserNamesFromService(ConsultantDto dto) {
         try {
@@ -176,6 +183,7 @@ public class ConsultantService {
         consultant.setConsultantId(generateConsultantId());
         consultant.setConsultantAddedTimeStamp(LocalDateTime.now());
         consultant.setUpdatedTimeStamp(LocalDateTime.now());
+        consultant.setApprovalStatus("NOT_RAISED");
 
         return consultant;
     }
@@ -446,7 +454,6 @@ public class ConsultantService {
 
         logger.info("Fetching the Consultants for User ID :{}",userId);
            UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
-           logger.info("user from the User Micro service {} :: {}",user.getUserId(),user.getAssociatedTeamLeadId());
         ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(userId);
         logger.info("Raw user response: {}", response);
            if(user!=null){
@@ -499,7 +506,7 @@ public class ConsultantService {
         Page<Consultant> pageableYetToOnBoardList=consultantRepo.yetToOnBoardConsultants(keyword,filters,pageable);
          return pageableYetToOnBoardList.map(consultantMapper::toDTO);
     }
-    public ConsultantAddedResponse moveToHotlist(String consultantId){
+    public ConsultantAddedResponse moveToHotlist(String consultantId,String userId){
         Optional<Consultant> optionalConsultant=consultantRepo.findById(consultantId);
         if(optionalConsultant.isEmpty()){
             throw new ConsultantNotFoundException("No Consultant Found With ID "+consultantId);
@@ -507,6 +514,27 @@ public class ConsultantService {
         Consultant consultant=optionalConsultant.get();
         consultant.setMovedToHotlist(true);
        Consultant savedConsultant=consultantRepo.save(consultant);
+
+        String approvedBy;
+       if(userId!=null){
+           approvedBy=getUserNameByUserId(userId);
+       }
+       else {
+           approvedBy="NA";
+       }
+        Map<String,String> emails=new HashMap<>();
+       if(consultant.getIsAssignAll()){
+           emails.putAll(getUserEmailIdsByRole("SALESEXECUTIVE"));
+           emails.putAll(getUserEmailIdsByRole("TEAMLEAD"));
+           emails.putAll(getUserEmailIdsByRole("RECRUITER"));
+       }else{
+           emails.put(consultant.getSalesExecutive(),getUserEmailByUserId(consultant.getSalesExecutiveId()));
+           emails.put(consultant.getTeamleadName(),getUserEmailByUserId(consultant.getTeamLeadId()));
+       }
+       emailNotificationUtil.notifyTeamForApprovedConsultant(
+               emails,consultantId,consultant.getName(),consultant.getTechnology(),consultant.getTeamleadName()
+               ,consultant.getSalesExecutive(),consultant.getRecruiterName(),approvedBy
+       );
        return consultantMapper.toConsultantAddedResponse(savedConsultant);
     }
     public ConsultantAddedResponse moveToYetToOnBoard(String consultantId){
@@ -519,4 +547,115 @@ public class ConsultantService {
         Consultant savedConsultant=consultantRepo.save(consultant);
         return consultantMapper.toConsultantAddedResponse(savedConsultant);
     }
+
+    public void modifyApprovalStatus(String userId,String consultantId,boolean isApproved){
+
+           Consultant consultant=consultantRepo.findById(consultantId).orElseThrow(()-> new ConsultantNotFoundException("No Consultant Found With ID :"+consultantId));
+           if(consultant.getTeamLeadId()==null || consultant.getTeamLeadId().isEmpty())
+               throw new UserRoleNotAssignedException("TEAM LEAD not assigned for consultant with ID: " + consultantId);
+           if(consultant.getRecruiterId()==null || consultant.getRecruiterId().isEmpty())
+               throw new UserRoleNotAssignedException("Recruiter not assigned for consultant with ID: " + consultantId);
+           Consultant modifiedConsultant=changeApprovalStatus(consultant,isApproved,userId);
+
+           modifiedConsultant.setUpdatedBy(userId);
+           modifiedConsultant.setUpdatedTimeStamp(LocalDateTime.now());
+           consultantRepo.save(modifiedConsultant);
+    }
+
+    public Consultant changeApprovalStatus(Consultant consultant,boolean isApproved,String userId){
+
+        Set<String> approvalStatusList=Set.of(
+                "NOT_RAISED","TL_PENDING","ADMIN_PENDING",
+                "SADMIN_PENDING","APPROVED","REJECTED");
+        String currentStatus=consultant.getApprovalStatus();
+
+        //List<String> emailIds=new ArrayList<>();
+        Map<String,String> emailIds=new HashMap<>();
+        if(isApproved) {
+            switch (currentStatus){
+                case "NOT_RAISED":
+                    emailIds.put(getUserNameByUserId(consultant.getTeamLeadId()), getUserEmailByUserId(consultant.getTeamLeadId()));
+                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,getUserNameByUserId(userId));
+                    consultant.setApprovalStatus("TL_PENDING");
+                    break;
+                case "TL_PENDING":
+                    emailIds=getUserEmailIdsByRole("ADMIN");
+                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,getUserNameByUserId(userId));
+                    consultant.setApprovalStatus("ADMIN_PENDING");
+                    break;
+                case "ADMIN_PENDING":
+                    emailIds=getUserEmailIdsByRole("SUPERADMIN");
+                    logger.info("ADMIN_PENDING :-- Email sending to Super Admin");
+                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,getUserNameByUserId(userId));
+                    consultant.setApprovalStatus("SADMIN_PENDING");
+                    break;
+                case "SADMIN_PENDING":
+                    emailIds.put(consultant.getRecruiterName(),getUserEmailByUserId(consultant.getRecruiterId()));
+                    emailIds.put(consultant.getTeamleadName(),getUserEmailByUserId(consultant.getTeamLeadId()));
+                    emailNotificationUtil.sendConsultantApprovedEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,getUserNameByUserId(userId));
+                    consultant.setApprovalStatus("APPROVED");
+                    break;
+                case "REJECTED":
+                    consultant.setApprovalStatus("TL_PENDING");
+                    break;
+                default:
+                    // already APPROVED or REJECTED do nothing
+                    break;
+            }
+        }  else {
+            emailIds.put(consultant.getRecruiterName(),getUserEmailByUserId(consultant.getRecruiterId()));
+            emailIds.put(consultant.getTeamleadName(),getUserEmailByUserId(consultant.getTeamLeadId()));
+            emailNotificationUtil.sendConsultantRejectedEmail(
+                    emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                    ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                    ,getUserNameByUserId(userId));
+            consultant.setApprovalStatus("REJECTED");
+        }
+       return consultant;
+    }
+
+    public String getUserEmailByUserId(String userId){
+
+        UserDto userDto=userServiceClient.getUserByUserID(userId).getBody().getData();
+
+        return userDto.getEmail();
+    }
+    public String getUserNameByUserId(String userId){
+
+       return userServiceClient.getUserByUserID(userId).getBody().getData().getUserName();
+    }
+    public Map<String,String> getUserEmailIdsByRole(String role){
+        if(!role.equalsIgnoreCase("SUPERADMIN")) {
+            return userServiceClient.getAllUsers().getData()
+                    .stream()
+                    .filter(userDto -> "US".equalsIgnoreCase(userDto.getEntity()))
+                    .filter(userDto -> userDto.getRoles().stream().anyMatch(roles -> roles.equalsIgnoreCase(role)))
+                    .collect(Collectors.toMap(
+                            UserDto::getUserName,
+                            UserDto::getEmail
+                    ));
+        }else{
+            logger.info("Fetching Primary Super Admin data...");
+            return userServiceClient.getAllUsers().getData()
+                    .stream()
+                    .filter(userDto -> userDto.getIsPrimarySuperAdmin())
+                    .collect(Collectors.toMap(
+                            UserDto::getUserName,
+                            UserDto::getEmail
+                    ));
+        }
+    }
+
 }

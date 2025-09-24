@@ -25,7 +25,7 @@ public class ConsultantSpecifications {
             "relocation", "billRate", "payroll", "marketingStartDate", "remarks",
             "consultantAddedTimeStamp", "updatedTimeStamp", "marketingVisa",
             "actualVisa", "isAssignAll", "movedToHotlist", "deletedBy",
-            "isDeleted", "deletedAt");
+            "isDeleted", "deletedAt","approvalStatus");
 
     public static Specification<Consultant> createSearchSpecification(String keyword) {
         return (root, query, criteriaBuilder) -> {
@@ -41,7 +41,7 @@ public class ConsultantSpecifications {
                     "teamleadName", "status", "passport", "salesExecutive", "salesExecutiveId",
                     "remoteOnsite", "technology", "experience", "location", "linkedInUrl",
                     "relocation", "billRate", "payroll", "remarks", "marketingVisa",
-                    "actualVisa"
+                    "actualVisa","approvalStatus"
             );
 
             // Building Predicates Dynamically
@@ -97,6 +97,7 @@ public class ConsultantSpecifications {
                          case "remarks":
                          case "marketingVisa":
                          case "actualVisa":
+                         case "approvalStatus":
                              predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),value.toString().toLowerCase()+"%"));
                              break;
                          case "isAssignAll":
