@@ -41,6 +41,7 @@ public class ConsultantDto {
     private String deletedBy;
     private boolean isDeleted;
     private LocalDateTime deletedAt;
+    private String approvalStatus;
 
     public String getMarketingVisa() {
         return marketingVisa;
@@ -326,5 +327,13 @@ public class ConsultantDto {
 
     public void setMovedToHotlist(boolean movedToHotlist) {
         this.movedToHotlist = movedToHotlist;
+    }
+
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
     }
 }

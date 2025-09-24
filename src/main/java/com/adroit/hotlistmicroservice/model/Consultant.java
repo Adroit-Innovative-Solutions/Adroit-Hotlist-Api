@@ -51,6 +51,9 @@ public class Consultant {
     private String deletedBy;
     private boolean isDeleted;
     private LocalDateTime deletedAt;
+    private String createdBy;
+    private String updatedBy;
+    private String approvalStatus;
 
     public String getRecruiterName() {
         return recruiterName;
@@ -346,5 +349,27 @@ public class Consultant {
         this.movedToHotlist = movedToHotlist;
     }
 
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
 
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
 }

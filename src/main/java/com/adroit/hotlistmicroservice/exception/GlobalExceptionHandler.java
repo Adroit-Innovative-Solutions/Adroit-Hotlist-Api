@@ -107,6 +107,17 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse,HttpStatus.CONFLICT);
     }
+    @ExceptionHandler(UserRoleNotAssignedException.class)
+    public ResponseEntity<ErrorResponse> handleUserRoleNotAssignedException(UserRoleNotAssignedException e){
+        ErrorDto error=new ErrorDto(400,e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                false,
+                "TL/Recruiter not Assigned Exception",
+                new ArrayList(),
+                error
+        );
+        return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+    }
     @ExceptionHandler(FeignClientException.class)
     public ResponseEntity<ErrorResponse> handleFeignClientException(FeignClientException e){
 

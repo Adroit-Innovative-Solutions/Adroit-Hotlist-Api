@@ -225,9 +225,10 @@ public class ConsultantController {
     }
     @PatchMapping("/moveToHotlist/{consultantId}")
     public ResponseEntity<ApiResponse<ConsultantAddedResponse>> movedToHotList(
-            @PathVariable String consultantId
+            @PathVariable String consultantId,
+            @RequestParam(required = false) String userId
     ){
-       ConsultantAddedResponse response=consultantService.moveToHotlist(consultantId);
+       ConsultantAddedResponse response=consultantService.moveToHotlist(consultantId,userId);
        ApiResponse<ConsultantAddedResponse> apiResponse=new ApiResponse<>(true,"Consultant Moved To Hotlist",response,null);
        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
@@ -239,5 +240,17 @@ public class ConsultantController {
         ApiResponse<ConsultantAddedResponse> apiResponse=new ApiResponse<>(true,"Consultant Moved To YetToOnBoard",response,null);
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
+
+   @PatchMapping("/modify-approvalStatus/{userId}")
+   public ResponseEntity<ApiResponse<Void>> modifyApprovalStatus(
+           @PathVariable String userId,
+           @RequestParam String consultantId,
+           @RequestParam(defaultValue = "true") Boolean isApproved
+   ) {
+
+        consultantService.modifyApprovalStatus(userId,consultantId,isApproved);
+        ApiResponse apiResponse=new ApiResponse(true,"Modified Approval Status",null,null );
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+   }
 
 }
