@@ -127,10 +127,7 @@ public class EmailNotificationUtil {
                 + "<li><strong>Recruiter:</strong> " + safeValue(recruiter) + "</li>"
                 + "</ul>"
                 + "<p><strong>Next Step:</strong> Please start marketing this candidate profile to clients immediately.</p>"
-                + "<p>Login to the portal for full details.</p>"
-                + "<p style='color:red; font-weight:bold; background-color:yellow; padding:5px;'>"
-                + "Note: This email is sent for testing purposes only. Please kindly ignore."
-                + "</p>";
+                + "<p>Login to the portal for full details.</p>";
 
         recipientEmails.entrySet().parallelStream().forEach(entry -> {
             try {
