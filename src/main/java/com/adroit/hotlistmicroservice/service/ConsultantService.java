@@ -575,36 +575,36 @@ public class ConsultantService {
             switch (currentStatus){
                 case "NOT_RAISED":
                     emailIds.put(getUserNameByUserId(consultant.getTeamLeadId()), getUserEmailByUserId(consultant.getTeamLeadId()));
-                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
-                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-                            ,getUserNameByUserId(userId));
+                    // emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                    //         emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                    //         ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                    //         ,getUserNameByUserId(userId));
                     consultant.setApprovalStatus("TL_PENDING");
                     break;
                 case "TL_PENDING":
                     emailIds=getUserEmailIdsByRole("ADMIN");
-                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
-                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-                            ,getUserNameByUserId(userId));
+                    // emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                    //         emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                    //         ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                    //         ,getUserNameByUserId(userId));
                     consultant.setApprovalStatus("ADMIN_PENDING");
                     break;
                 case "ADMIN_PENDING":
                     emailIds=getUserEmailIdsByRole("SUPERADMIN");
                     logger.info("ADMIN_PENDING :-- Email sending to Super Admin");
-                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
-                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-                            ,getUserNameByUserId(userId));
+                    // emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                    //         emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                    //         ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                    //         ,getUserNameByUserId(userId));
                     consultant.setApprovalStatus("SADMIN_PENDING");
                     break;
                 case "SADMIN_PENDING":
                     emailIds.put(consultant.getRecruiterName(),getUserEmailByUserId(consultant.getRecruiterId()));
                     emailIds.put(consultant.getTeamleadName(),getUserEmailByUserId(consultant.getTeamLeadId()));
-                    emailNotificationUtil.sendConsultantApprovedEmail(
-                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-                            ,getUserNameByUserId(userId));
+                    // emailNotificationUtil.sendConsultantApprovedEmail(
+                    //         emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                    //         ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                    //         ,getUserNameByUserId(userId));
                     consultant.setApprovalStatus("APPROVED");
                     break;
                 case "REJECTED":
@@ -617,10 +617,10 @@ public class ConsultantService {
         }  else {
             emailIds.put(consultant.getRecruiterName(),getUserEmailByUserId(consultant.getRecruiterId()));
             emailIds.put(consultant.getTeamleadName(),getUserEmailByUserId(consultant.getTeamLeadId()));
-            emailNotificationUtil.sendConsultantRejectedEmail(
-                    emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-                    ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-                    ,getUserNameByUserId(userId));
+            // emailNotificationUtil.sendConsultantRejectedEmail(
+            //         emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+            //         ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+            //         ,getUserNameByUserId(userId));
             consultant.setApprovalStatus("REJECTED");
         }
        return consultant;
