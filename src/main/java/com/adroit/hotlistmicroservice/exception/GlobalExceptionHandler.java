@@ -118,6 +118,17 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException e){
+        ErrorDto error=new ErrorDto(400,e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                false,
+                "No Resource Found",
+                new ArrayList(),
+                error
+        );
+        return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
+    }
     @ExceptionHandler(FeignClientException.class)
     public ResponseEntity<ErrorResponse> handleFeignClientException(FeignClientException e){
 
