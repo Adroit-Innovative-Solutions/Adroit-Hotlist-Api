@@ -1,0 +1,105 @@
+package com.adroit.hotlistmicroservice.service;
+
+import com.adroit.hotlistmicroservice.dto.*;
+import com.adroit.hotlistmicroservice.exception.ResourceNotFoundException;
+import com.adroit.hotlistmicroservice.mapper.RateTermsConfirmationMapper;
+import com.adroit.hotlistmicroservice.model.Consultant;
+import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
+import com.adroit.hotlistmicroservice.repo.RateTermsConfirmationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+public class RateTermsConfirmationService {
+
+    @Autowired
+    RateTermsConfirmationRepository rtrRepository;
+    @Autowired
+    RateTermsConfirmationMapper rtrMapper;
+    @Autowired
+    ConsultantService consultantService;
+
+    public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto){
+
+        RateTermsConfirmation rtr=rtrMapper.entityFromRequest(rtrDto);
+        rtr.setRtrId(generateRtrId());
+        rtr.setCreatedBy(userId);
+        ConsultantDto consultant=consultantService.getConsultantByID(rtrDto.getConsultantId());
+        rtr.setConsultantName(consultant.getName());
+        rtr.setSalesExecutiveId(consultant.getSalesExecutiveId());
+        rtr.setSalesExecutive(consultant.getSalesExecutive());
+        rtr.setTechnology(consultant.getTechnology());
+        RateTermsConfirmation savedRTR=rtrRepository.save(rtr);
+        return rtrMapper.toRtrAddedResponse(savedRTR);
+    }
+
+    public RTRAddedResponse updateRTR(String rtrId, String userId, RTRUpdateDTO rtrUpdateDTO){
+
+        RateTermsConfirmation existingRTR=rtrRepository.findById(rtrId).orElseThrow(()-> new ResourceNotFoundException("No RTR Found with ID :"+ rtrId+"to Update"));
+        if(existingRTR.getIsDeleted()) throw new ResourceNotFoundException("No RTR Found with ID :"+ rtrId+"to Update");
+        rtrMapper.updateRTRFromDto(rtrUpdateDTO,existingRTR);
+        existingRTR.setUpdatedBy(userId);
+        existingRTR.setUpdatedAt(LocalDateTime.now());
+       RateTermsConfirmation savedRTR=rtrRepository.save(existingRTR);
+       return new RTRAddedResponse(rtrId, savedRTR.getConsultantId(), savedRTR.getConsultantName(), savedRTR.getClientName());
+    }
+    public String generateRtrId(){
+        String lastRtrId=rtrRepository.findTopByOrderByRtrIdDesc()
+                .map(RateTermsConfirmation::getRtrId)
+                .orElse("RTR000000");
+
+        int num=Integer.parseInt(lastRtrId.replace("RTR",""))+1;
+        return String.format("RTR%06d",num);
+    }
+
+    public Page<RateTermsConfirmationDTO> getRTRList(String keyword, Map<String,Object> filters, Pageable pageable){
+
+     return rtrRepository.allRTRs(keyword,filters,pageable)
+              .map(rtrMapper::toDtoFromEntity);
+    }
+
+    public Page<RateTermsConfirmationDTO> getSalesRTRList(String userId,String keyword,Map<String ,Object> filters,Pageable pageable){
+
+        return rtrRepository.salesRTRs(userId, keyword, filters, pageable)
+                .map(rtrMapper::toDtoFromEntity);
+    }
+
+    public RateTermsConfirmationDTO getRTRById(String rtrId){
+
+        RateTermsConfirmation rateTermsConfirmation=rtrRepository.findById(rtrId).orElseThrow(()-> new ResourceNotFoundException("No RTR Found With ID :"+rtrId));
+        if(rateTermsConfirmation.getIsDeleted()) throw new ResourceNotFoundException("No RTR Found with ID :"+ rtrId+"to Update");
+        return rtrMapper.toDtoFromEntity(rateTermsConfirmation);
+    }
+
+    public Page<RateTermsConfirmationDTO> getRTRByConsultant(String consultantId,String keyword,Map<String,Object> filters,Pageable pageable){
+
+        Page<RateTermsConfirmation> rateTermsConfirmationPage=rtrRepository.consultantRTRs(consultantId,keyword,filters,pageable);
+        return rateTermsConfirmationPage.map(rtrMapper::toDtoFromEntity);
+    }
+
+    public Map<String,Object> deleteRTR(String rtrId, String userId) {
+
+        RateTermsConfirmation rtr=rtrRepository.findById(rtrId).orElseThrow(()-> new ResourceNotFoundException("No RTR Found With ID: "+rtrId));
+
+        rtr.setIsDeleted(true);
+        rtr.setDeletedAt(LocalDateTime.now());
+        rtr.setDeletedBy(userId);
+
+        RateTermsConfirmation deletedRTR=rtrRepository.save(rtr);
+
+        Map<String,Object> deleteResponse=new HashMap<>();
+        deleteResponse.put("rtrId",deletedRTR.getRtrId());
+        deleteResponse.put("consultantId",deletedRTR.getConsultantId());
+        deleteResponse.put("deletedAt",deletedRTR.getDeletedAt());
+        deleteResponse.put("deletedBy",deletedRTR.getDeletedBy());
+
+        return deleteResponse;
+
+    }
+}
