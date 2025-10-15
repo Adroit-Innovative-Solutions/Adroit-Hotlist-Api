@@ -9,7 +9,6 @@ import lombok.*;
 @Builder
 public class RateTermsConfirmationDTO {
 
-    private String rtrId;
     private String consultantId;
     private String consultantName;
     private String technology;
