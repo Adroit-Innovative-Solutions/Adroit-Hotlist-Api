@@ -25,5 +25,6 @@ public class RateTermsConfirmationDTO {
     private String vendorCompany;
     private String vendorLinkedIn;
     private String implementationPartner;
+    private String comments;
 
 }
