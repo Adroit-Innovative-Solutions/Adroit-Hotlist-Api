@@ -11,6 +11,8 @@ import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.repo.RTRInterviewRepository;
 import com.adroit.hotlistmicroservice.repo.RateTermsConfirmationRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,9 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -43,7 +43,7 @@ public class RTRInterviewService {
        if(rtr.getIsDeleted()) throw new ResourceNotFoundException("NO RTR Found with ID "+interviewDto.getRtrId());
 
        Optional<RateTermsConfirmation> rtrInterview= rateTermsConfirmationRepository.findByRtrIdAndIsDeleted(interviewDto.getRtrId(),true);
-       if(!rtrInterview.isPresent())
+       if(rtrInterview.isPresent())
            throw new ResourceNotFoundException("Interview Already Scheduled For RTR ID "+interviewDto.getRtrId());
 
        RTRInterview interview=rtrInterviewMapper.rtrToRTRInterview(rtr);
@@ -56,6 +56,8 @@ public class RTRInterviewService {
        interview.setCreatedBy(userId);
        interview.setCreatedAt(LocalDateTime.now());
        interview.setUpdatedAt(LocalDateTime.now());
+
+        addInterviewHistory(interview, interviewDto.getInterviewLevel(), "SCHEDULED");
 
        RTRInterview savedInterview=rtrInterviewRepository.save(interview);
 
@@ -75,10 +77,44 @@ public class RTRInterviewService {
         }else {
             rtrInterview.setIsPlaced(false);
         }
+        addInterviewHistory(rtrInterview, updateInterviewDto.getInterviewLevel(), updateInterviewDto.getInterviewStatus());
+
         RTRInterview savedInterview=rtrInterviewRepository.save(rtrInterview);
 
         return new InterviewAddedDto(savedInterview.getInterviewId(),savedInterview.getRtrId(),
                 savedInterview.getConsultantId(), savedInterview.getConsultantName());
+    }
+
+    private void addInterviewHistory(RTRInterview interview, String level, String status) {
+        List<Map<String, Object>> historyList = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Read existing history
+        if (interview.getInterviewHistory() != null && !interview.getInterviewHistory().isEmpty()) {
+            try {
+                historyList = mapper.readValue(
+                        interview.getInterviewHistory(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+            } catch (Exception e) {
+                // Log error and continue with empty list
+                // e.g., logger.warn("Failed to read interview history", e);
+            }
+        }
+
+        // Add new entry
+        Map<String, Object> newEntry = new HashMap<>();
+        newEntry.put("interviewLevel", level);
+        newEntry.put("interviewStatus", status);
+        newEntry.put("timestamp", LocalDateTime.now().toString());
+        historyList.add(newEntry);
+
+        // Save back as JSON string
+        try {
+            interview.setInterviewHistory(mapper.writeValueAsString(historyList));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update interview history", e);
+        }
     }
 
     public void deleteInterview(String interviewId,String userId){
