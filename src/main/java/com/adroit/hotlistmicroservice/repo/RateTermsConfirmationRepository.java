@@ -1,6 +1,7 @@
 package com.adroit.hotlistmicroservice.repo;
 
 import com.adroit.hotlistmicroservice.dto.RateTermsConfirmationDTO;
+import com.adroit.hotlistmicroservice.model.RTRInterview;
 import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
 import com.adroit.hotlistmicroservice.utils.RTRSpecifications;
 import org.apache.coyote.Request;
@@ -30,5 +31,7 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
    }
 
    Optional<RateTermsConfirmation> findById(String rtrId);
+
+    Optional<RateTermsConfirmation> findByRtrIdAndIsDeleted(String rtrId, Boolean isDeleted);
 
 }
