@@ -1,9 +1,6 @@
 package com.adroit.hotlistmicroservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -35,6 +32,11 @@ public class RTRInterview extends BaseEntity {
     private String zoomLink;
     private int duration;
     private Boolean isPlaced;
+
+    @Lob
+    @Column(name = "interview_history", columnDefinition = "TEXT")
+    private String interviewHistory;
+
 
     @PrePersist
     protected void onCreate(){
