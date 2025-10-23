@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 import java.util.Map;
 
@@ -42,5 +43,7 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     default Page<Consultant> yetToOnBoardConsultants(String keyword,Map<String,Object> filters, Pageable pageable) {
         return findAll(ConsultantSpecifications.yetToOnBoardConsultants(keyword,filters),pageable);
     }
+    @Query("SELECT c.consultantId FROM Consultant c WHERE c.teamLeadId= :teamLeadId AND isDeleted= false")
+    List<String> findConsultantIdsByTeamLeadId(@Param("teamLeadId") String teamLeadId);
 
 }

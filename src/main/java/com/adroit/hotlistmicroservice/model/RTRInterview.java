@@ -6,39 +6,38 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@Table(name = "rtr_us")
 @Entity
-public class RateTermsConfirmation extends BaseEntity{
+@Table(name = "interviews_us")
+public class RTRInterview extends BaseEntity {
 
     @Id
+    private String interviewId;
     private String rtrId;
     private String consultantId;
     private String consultantName;
-    private String emailId;
+    private String consultantEmailId;
     private String technology;
     private String clientId;
     private String clientName;
-    private String ratePart;
-    private String rtrStatus;
     private String salesExecutiveId;
     private String salesExecutive;
-    private String vendorName;
-    private String vendorEmailId;
-    private String vendorMobileNumber;
-    private String vendorCompany;
-    private String vendorLinkedIn;
-    private String implementationPartner;
-    private String comments;
-
+    private String interviewLevel;
+    private String interviewStatus;
+    private LocalDateTime interviewDateTime;
+    private String interviewerEmailId;
+    private String zoomLink;
+    private int duration;
+    private Boolean isPlaced;
 
     @PrePersist
     protected void onCreate(){
-        super.onCreate();
-        this.rtrStatus="SUBMITTED";
+        this.interviewStatus="SCHEDULED";
     }
 }
