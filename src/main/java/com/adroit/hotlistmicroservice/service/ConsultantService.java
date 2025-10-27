@@ -382,10 +382,10 @@ public class ConsultantService {
             logger.info("No active documents found to delete for consultant {}", consultantId);
         }
     }
-    public Page<ConsultantDto> getAllConsultants(String keyword,Map<String,Object> filters,Pageable pageable) {
+    public Page<ConsultantDto> getAllConsultants(String keyword, Map<String,Object> filters, Pageable pageable, String statusFilter) {
         logger.info("Fetching All Consultants with keyword: {}...", keyword);
 
-        Page<Consultant> list = consultantRepo.allConsultants(keyword,filters,pageable);
+        Page<Consultant> list = consultantRepo.allConsultants(keyword,filters,statusFilter,pageable);
 
         Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
         logger.info("Fetched {} consultants with keyword: {}", dtoList.getTotalElements(), keyword);
@@ -434,7 +434,7 @@ public class ConsultantService {
         return dropDownEmployees;
     }
 
-    public Page<ConsultantDto> getConsultantsByRecruiterId(Pageable pageable, String userId, String keyword, Map<String,Object> filters){
+    public Page<ConsultantDto> getConsultantsByRecruiterId(Pageable pageable, String userId, String keyword, Map<String,Object> filters, String statusFilter){
 
         logger.info("Fetching the Consultants For UserID :{}",userId);
        UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
@@ -444,13 +444,13 @@ public class ConsultantService {
        //         throw new UserNotFoundException("No User Found In US Entity with "+userId);
        //     }
        // }
-        Page<Consultant> pageableHotlist=consultantRepo.consultantsByRecruiter(userId, keyword, filters,pageable);
+        Page<Consultant> pageableHotlist=consultantRepo.consultantsByRecruiter(userId, keyword, filters,statusFilter,pageable);
         Page<ConsultantDto> pageableHotlistDto= pageableHotlist.map(consultantMapper::toDTO);
 
         logger.info("Found {} consultants for user {}",pageableHotlistDto.getTotalElements(),userId);
        return pageableHotlistDto;
     }
-    public Page<ConsultantDto> getTeamConsultants(Pageable pageable,String userId,String keyword,Map<String,Object> filters){
+    public Page<ConsultantDto> getTeamConsultants(Pageable pageable, String userId, String keyword, Map<String,Object> filters, String statusFilter){
 
         logger.info("Fetching the Consultants for User ID :{}",userId);
            UserDto user=userServiceClient.getUserByUserID(userId).getBody().getData();
@@ -467,10 +467,10 @@ public class ConsultantService {
           logger.info("isTeamLead ---------------> {}",isTeamLead);
           Page<Consultant> pageableHotList;
           if(isTeamLead) {
-               pageableHotList = consultantRepo.consultantsByTeamLead(userId, keyword,filters ,pageable);
+               pageableHotList = consultantRepo.consultantsByTeamLead(userId, keyword,filters ,statusFilter,pageable);
           }else {
               String teamLeadId=user.getTeamAssignments().getFirst().getTeamLeadId();
-               pageableHotList = consultantRepo.consultantsByTeamLead(teamLeadId, keyword,filters, pageable);
+               pageableHotList = consultantRepo.consultantsByTeamLead(teamLeadId, keyword,filters, statusFilter,pageable);
           }
         Page<ConsultantDto> hotListDtoPage=pageableHotList.map(consultantMapper::toDTO);
 
@@ -490,20 +490,20 @@ public class ConsultantService {
         logger.info("Found {} US users ",users.size());
        return new PageImpl<>(pagedList,pageable, users.size());
     }
-    public Page<ConsultantDto> getSalesExecutiveConsultants(String salesExecutiveId,String keyword,Pageable pageable,Map<String,Object> filters){
+    public Page<ConsultantDto> getSalesExecutiveConsultants(String salesExecutiveId, String keyword, Pageable pageable, Map<String,Object> filters, String statusFilter){
         logger.info("Fetching the Consultants for Sales Executive ID :{}",salesExecutiveId);
        UserDto userDto=userServiceClient.getUserByUserID(salesExecutiveId).getBody().getData();
        if(userDto==null){
            logger.error("No User Found With ID {}",salesExecutiveId);
            throw new UserNotFoundException("No User Found With ID "+salesExecutiveId);
        }
-       Page<Consultant> pageableHotList=consultantRepo.consultantsBySalesExecutive(salesExecutiveId,keyword,filters,pageable);
+       Page<Consultant> pageableHotList=consultantRepo.consultantsBySalesExecutive(salesExecutiveId,keyword,filters,statusFilter,pageable);
         logger.info("Found {} consultants for SalesExecutive {}",pageableHotList.getTotalElements(),salesExecutiveId);
        return pageableHotList.map(consultantMapper::toDTO);
     }
-    public Page<ConsultantDto> getYetToOnBoardList(String keyword,Pageable pageable,Map<String,Object> filters){
+    public Page<ConsultantDto> getYetToOnBoardList(String keyword,Pageable pageable,Map<String,Object> filters,String statusFilter){
 
-        Page<Consultant> pageableYetToOnBoardList=consultantRepo.yetToOnBoardConsultants(keyword,filters,pageable);
+        Page<Consultant> pageableYetToOnBoardList=consultantRepo.yetToOnBoardConsultants(keyword,filters,statusFilter,pageable);
          return pageableYetToOnBoardList.map(consultantMapper::toDTO);
     }
     public ConsultantAddedResponse moveToHotlist(String consultantId,String userId){

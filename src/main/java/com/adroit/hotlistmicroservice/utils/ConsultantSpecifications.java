@@ -135,7 +135,7 @@ public class ConsultantSpecifications {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
-    public static Specification<Consultant> recruiterSearch(String recruiterId, String keyword,Map<String,Object> filters) {
+    public static Specification<Consultant> recruiterSearch(String recruiterId, String keyword,Map<String,Object> filters,String statusFilter) {
         return Specification.<Consultant>where(isNotDeleted())
                 .and(isMovedToHotlist())
                 .and((root, query, cb) ->
@@ -144,10 +144,11 @@ public class ConsultantSpecifications {
                                 cb.isTrue(root.get("isAssignAll"))
                         ))
                 .and(createSearchSpecification(keyword))
-                .and(createFiltersSpecification(filters));
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
     }
 
-    public static Specification<Consultant> teamLeadSearch(String teamLeadId, String keyword,Map<String,Object> filters) {
+    public static Specification<Consultant> teamLeadSearch(String teamLeadId, String keyword,Map<String,Object> filters,String statusFilter) {
         return Specification.<Consultant>where(isNotDeleted())
                 .and(isMovedToHotlist())
                 .and((root, query, cb) ->
@@ -156,9 +157,10 @@ public class ConsultantSpecifications {
                                 cb.isTrue(root.get("isAssignAll"))
                         ))
                 .and(createSearchSpecification(keyword))
-                .and(createFiltersSpecification(filters));
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
     }
-    public static Specification<Consultant> salesExecutiveSearch(String salesExecutiveId,String keyword,Map<String,Object> filters){
+    public static Specification<Consultant> salesExecutiveSearch(String salesExecutiveId,String keyword,Map<String,Object> filters,String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
                 .and(isMovedToHotlist())
                 .and((root, query, criteriaBuilder) ->
@@ -167,13 +169,15 @@ public class ConsultantSpecifications {
                             criteriaBuilder.isTrue(root.get("isAssignAll"))
                     ))
                 .and(createSearchSpecification(keyword))
-                .and(createFiltersSpecification(filters));
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
      }
-     public static Specification<Consultant> allConsultantsSearch(String keyword,Map<String,Object> filters){
+     public static Specification<Consultant> allConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
                 .and(isMovedToHotlist())
                 .and(createSearchSpecification(keyword))
-                .and(createFiltersSpecification(filters));
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
      }
 
      public static  Specification<Consultant> isNotDeleted(){
@@ -183,12 +187,21 @@ public class ConsultantSpecifications {
         return ((root, query, criteriaBuilder) ->
                 criteriaBuilder.isTrue(root.get("movedToHotlist")));
     }
-    public static Specification<Consultant> yetToOnBoardConsultants(String keyword,Map<String,Object> filters){
+    public static Specification<Consultant> yetToOnBoardConsultants(String keyword,Map<String,Object> filters,String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.or(criteriaBuilder.isFalse(root.get("movedToHotlist"))))
                 .and(createSearchSpecification(keyword))
-                .and(createFiltersSpecification(filters));
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
     }
 
+    private static Specification<Consultant> applyStatusFilter(String statusFilter) {
+        return (root, query, criteriaBuilder) -> {
+            if (statusFilter == null || statusFilter.isBlank()) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.equal(criteriaBuilder.lower(root.get("status")), statusFilter.toLowerCase());
+        };
+    }
 }
