@@ -56,7 +56,7 @@ public class ConsultantController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam Map<String,Object> filters,
-            @RequestParam String statusFilter
+            @RequestParam (required = false)String statusFilter
             ){
         logger.info("In Coming Request For Fetching All Consultants..page {} size {} keyword {}",page,size,keyword);
         Pageable pageable = PageRequest.of(
@@ -143,7 +143,7 @@ public class ConsultantController {
             @RequestParam(required = false) String keyword,
             @RequestParam Map<String,Object> filters,
             @PathVariable String userId,
-            @RequestParam String statusFilter
+            @RequestParam (required = false) String statusFilter
     ){
         Pageable pageable=PageRequest.of(
                 page,
@@ -167,7 +167,7 @@ public class ConsultantController {
             @RequestParam(required = false) String keyword,
             @RequestParam Map<String,Object> filters,
             @PathVariable String userId,
-            @RequestParam String statusFilter
+            @RequestParam (required = false) String statusFilter
 
     ){
         Pageable pageable=PageRequest.of(
@@ -204,7 +204,7 @@ public class ConsultantController {
             @RequestParam(required = false) String keyword,
             @RequestParam Map<String,Object> filters,
             @PathVariable String userId,
-            @RequestParam String statusFilter
+            @RequestParam (required = false)String statusFilter
     ){
         Pageable pageable=PageRequest.of(page,
                 size,
@@ -220,7 +220,7 @@ public class ConsultantController {
             @RequestParam (defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
             @RequestParam Map<String,Object> filters,
-            @RequestParam String statusFilter
+            @RequestParam (required = false)String statusFilter
     ){
         Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedTimeStamp");
         Page<ConsultantDto> pageResponse=consultantService.getYetToOnBoardList(keyword,pageable,filters,statusFilter);
