@@ -3,9 +3,10 @@ package com.adroit.hotlistmicroservice.service;
 import com.adroit.hotlistmicroservice.dto.*;
 import com.adroit.hotlistmicroservice.exception.ResourceNotFoundException;
 import com.adroit.hotlistmicroservice.mapper.RateTermsConfirmationMapper;
-import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
+import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.repo.RateTermsConfirmationRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class RateTermsConfirmationService {
 
@@ -24,6 +27,8 @@ public class RateTermsConfirmationService {
     RateTermsConfirmationMapper rtrMapper;
     @Autowired
     ConsultantService consultantService;
+    @Autowired
+    ConsultantRepo consultantRepo;
 
     public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto){
 
@@ -67,6 +72,14 @@ public class RateTermsConfirmationService {
     public Page<RateTermsConfirmationDTO> getSalesRTRList(String userId,String keyword,Map<String ,Object> filters,Pageable pageable){
 
         return rtrRepository.salesRTRs(userId, keyword, filters, pageable)
+                .map(rtrMapper::toDtoFromEntity);
+    }
+
+    public Page<RateTermsConfirmationDTO> getTeamRtrs(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
+
+        List<String> teamConsultants= consultantRepo.findConsultantIdsByTeamLeadId(userId);
+        log.info("No. of consultants found: {} | Consultant IDs: {}", teamConsultants.size(), teamConsultants);
+        return rtrRepository.teamRtrs(teamConsultants,keyword,filters,pageable)
                 .map(rtrMapper::toDtoFromEntity);
     }
 

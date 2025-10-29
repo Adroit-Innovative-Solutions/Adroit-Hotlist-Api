@@ -1,5 +1,6 @@
 package com.adroit.hotlistmicroservice.utils;
 
+import com.adroit.hotlistmicroservice.model.RTRInterview;
 import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -117,5 +118,19 @@ public class RTRSpecifications {
     private static Specification<RateTermsConfirmation> isNotDeleted(){
         return(root, query, criteriaBuilder) ->
             criteriaBuilder.isFalse(root.get("isDeleted"));
+    }
+
+    public static Specification<RateTermsConfirmation> teamRtrs(List<String> consultantIds, String keyword, Map<String, Object> filters) {
+        return Specification
+                .where(isNotDeleted())
+                .and((root, query, criteriaBuilder) -> {
+                    if (consultantIds != null && !consultantIds.isEmpty()) {
+                        return root.get("consultantId").in(consultantIds);
+                    } else {
+                        return criteriaBuilder.conjunction();
+                    }
+                })
+                .and(createFiltersSpecification(filters))
+                .and(createSearchSpecification(keyword));
     }
 }

@@ -12,7 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-
+@CrossOrigin(origins = {"http://35.188.150.92", "http://192.168.0.140:3000", "http://192.168.0.139:3000","https://mymulya.com","http://localhost:3000","http://192.168.0.135:8080","http://192.168.0.135",
+        "http://182.18.177.16","http://192.168.1.151:3000","http://192.168.0.193:3000"})
 @RestController
 @RequestMapping("/hotlist")
 public class RateTermsConfirmationController {
@@ -72,6 +73,23 @@ public class RateTermsConfirmationController {
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
 
+    @GetMapping("/teamRtr-list/{userId}")
+    public ResponseEntity<ApiResponse<Page<RateTermsConfirmationDTO>>> getTeamRtrs(
+            @PathVariable String userId,
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam (required = false) String keyword,
+            @RequestParam (required = false) Map<String,Object> filters
+    ){
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedAt");
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getTeamRtrs(userId,keyword,filters,pageable);
+
+        PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
+
+        ApiResponse apiResponse=new ApiResponse(true,"RTR Data Fetched Successfully",pageResponse,null);
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+
     @GetMapping("/rtr-id/{rtrId}")
     public ResponseEntity<ApiResponse<RateTermsConfirmationDTO>> getRTRByRTRId(
             @PathVariable String rtrId
@@ -95,6 +113,8 @@ public class RateTermsConfirmationController {
         ApiResponse apiResponse=new ApiResponse<>(true,"RTR data Fetched Successfully",pageResponse,null);
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
+
+
 
     @DeleteMapping("/delete-rtr/{rtrId}/{userId}")
     public ResponseEntity<ApiResponse<Map<String,Object>>> deleteRTR(
