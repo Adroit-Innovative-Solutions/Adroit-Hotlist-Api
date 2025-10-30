@@ -1,0 +1,257 @@
+package com.adroit.hotlistmicroservice.model;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.*;
+
+@Entity
+@Table(name = "c2c_employer_details")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class C2CEmployerDetails {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "emp_id")
+    private Long empId;
+    private String companyName;
+    private String companyFullAddress;
+    private String federalId;
+    private String netTerms;
+    private String signingAuthority;
+    private String signingAuthorityTitle;
+    private String emailId;
+    private String phoneNo;
+    private String website;
+
+    private String pocOfAccountsPerson;
+    private String pocEmailId;
+    private String pocPhoneNumber;
+    private String bankDetails;
+    private String bankName;
+    private String bankCity;
+    private String bankState;
+    private String bankZipCode;
+    private String routingNumber;
+    private String bankAccountNumber;
+    private String achRoutingCode;
+    private String wireRoutingCode;
+    private String accountType;
+
+    //Each employer can have multiple documents
+    @OneToMany(mappedBy = "employer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value="employer-documents")
+    private List<C2CDocuments> documents;
+
+    //Each employer belongs to one placement
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "placement_id", referencedColumnName = "placementId")
+    private PlacementDetails placementDetails;
+
+    // Getters and Setters
+    public Long getEmpId() {
+        return empId;
+    }
+
+    public void setEmpId(Long empId) {
+        this.empId = empId;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getCompanyFullAddress() {
+        return companyFullAddress;
+    }
+
+    public void setCompanyFullAddress(String companyFullAddress) {
+        this.companyFullAddress = companyFullAddress;
+    }
+
+    public String getFederalId() {
+        return federalId;
+    }
+
+    public void setFederalId(String federalId) {
+        this.federalId = federalId;
+    }
+
+    public String getNetTerms() {
+        return netTerms;
+    }
+
+    public void setNetTerms(String netTerms) {
+        this.netTerms = netTerms;
+    }
+
+    public String getSigningAuthority() {
+        return signingAuthority;
+    }
+
+    public void setSigningAuthority(String signingAuthority) {
+        this.signingAuthority = signingAuthority;
+    }
+
+    public String getSigningAuthorityTitle() {
+        return signingAuthorityTitle;
+    }
+
+    public void setSigningAuthorityTitle(String signingAuthorityTitle) {
+        this.signingAuthorityTitle = signingAuthorityTitle;
+    }
+
+    public String getEmailId() {
+        return emailId;
+    }
+
+    public void setEmailId(String emailId) {
+        this.emailId = emailId;
+    }
+
+    public String getPhoneNo() {
+        return phoneNo;
+    }
+
+    public void setPhoneNo(String phoneNo) {
+        this.phoneNo = phoneNo;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+
+    public List<C2CDocuments> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<C2CDocuments> documents) {
+        this.documents = documents;
+    }
+
+    public PlacementDetails getPlacementDetails() {
+        return placementDetails;
+    }
+
+    public void setPlacementDetails(PlacementDetails placementDetails) {
+        this.placementDetails = placementDetails;
+    }
+
+    public String getPocOfAccountsPerson() {
+        return pocOfAccountsPerson;
+    }
+
+    public void setPocOfAccountsPerson(String pocOfAccountsPerson) {
+        this.pocOfAccountsPerson = pocOfAccountsPerson;
+    }
+
+    public String getPocEmailId() {
+        return pocEmailId;
+    }
+
+    public void setPocEmailId(String pocEmailId) {
+        this.pocEmailId = pocEmailId;
+    }
+
+    public String getPocPhoneNumber() {
+        return pocPhoneNumber;
+    }
+
+    public void setPocPhoneNumber(String pocPhoneNumber) {
+        this.pocPhoneNumber = pocPhoneNumber;
+    }
+
+    public String getBankDetails() {
+        return bankDetails;
+    }
+
+    public void setBankDetails(String bankDetails) {
+        this.bankDetails = bankDetails;
+    }
+
+    public String getBankName() {
+        return bankName;
+    }
+
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
+    }
+
+    public String getBankCity() {
+        return bankCity;
+    }
+
+    public void setBankCity(String bankCity) {
+        this.bankCity = bankCity;
+    }
+
+    public String getBankState() {
+        return bankState;
+    }
+
+    public void setBankState(String bankState) {
+        this.bankState = bankState;
+    }
+
+    public String getBankZipCode() {
+        return bankZipCode;
+    }
+
+    public void setBankZipCode(String bankZipCode) {
+        this.bankZipCode = bankZipCode;
+    }
+
+    public String getRoutingNumber() {
+        return routingNumber;
+    }
+
+    public void setRoutingNumber(String routingNumber) {
+        this.routingNumber = routingNumber;
+    }
+
+    public String getBankAccountNumber() {
+        return bankAccountNumber;
+    }
+
+    public void setBankAccountNumber(String bankAccountNumber) {
+        this.bankAccountNumber = bankAccountNumber;
+    }
+
+    public String getAchRoutingCode() {
+        return achRoutingCode;
+    }
+
+    public void setAchRoutingCode(String achRoutingCode) {
+        this.achRoutingCode = achRoutingCode;
+    }
+
+    public String getWireRoutingCode() {
+        return wireRoutingCode;
+    }
+
+    public void setWireRoutingCode(String wireRoutingCode) {
+        this.wireRoutingCode = wireRoutingCode;
+    }
+
+    public String getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
+    }
+}

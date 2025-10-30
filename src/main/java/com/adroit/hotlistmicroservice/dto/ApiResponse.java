@@ -20,6 +20,18 @@ public class ApiResponse<T> {
         this.error = error;
     }
 
+
+    // ✅ Static helper for success responses
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(true, message, data, null);
+    }
+
+    // ✅ Static helper for error responses (compatible with your ErrorDto)
+    public static <T> ApiResponse<T> error(String message, int errorCode, String errorMessage) {
+        ErrorDto errorDto = new ErrorDto(errorCode, errorMessage);
+        return new ApiResponse<>(false, message, null, errorDto);
+    }
+
     // Getters and Setters
     public boolean isSuccess() {
         return success;
