@@ -28,6 +28,7 @@ public interface UserServiceClient {
     @GetMapping("/{userId}/login-status")
     ResponseEntity<ApiResponse<UserLoginStatusDTO>> getLoginStatusByUserId(@PathVariable("userId") String userId);
 
+
 }
 
 

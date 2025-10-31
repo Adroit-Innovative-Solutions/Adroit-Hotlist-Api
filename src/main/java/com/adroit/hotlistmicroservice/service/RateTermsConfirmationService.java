@@ -1,5 +1,6 @@
 package com.adroit.hotlistmicroservice.service;
 
+import com.adroit.hotlistmicroservice.client.UserServiceClient;
 import com.adroit.hotlistmicroservice.dto.*;
 import com.adroit.hotlistmicroservice.exception.ResourceNotFoundException;
 import com.adroit.hotlistmicroservice.mapper.RateTermsConfirmationMapper;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,6 +31,8 @@ public class RateTermsConfirmationService {
     ConsultantService consultantService;
     @Autowired
     ConsultantRepo consultantRepo;
+    @Autowired
+    UserServiceClient userServiceClient;
 
     public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto){
 
@@ -75,13 +79,35 @@ public class RateTermsConfirmationService {
                 .map(rtrMapper::toDtoFromEntity);
     }
 
-    public Page<RateTermsConfirmationDTO> getTeamRtrs(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
-
-        List<String> teamConsultants= consultantRepo.findConsultantIdsByTeamLeadId(userId);
+    public Page<RateTermsConfirmationDTO> getTeamRtrs(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+        List<String> teamConsultants = consultantRepo.findConsultantIdsByTeamLeadId(userId);
         log.info("No. of consultants found: {} | Consultant IDs: {}", teamConsultants.size(), teamConsultants);
-        return rtrRepository.teamRtrs(teamConsultants,keyword,filters,pageable)
+
+        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.teamRtrs(teamConsultants, keyword, filters, pageable)
                 .map(rtrMapper::toDtoFromEntity);
+
+        // ✅ Populate createdByName using existing Feign client call
+        dtoPage.forEach(dto -> {
+            try {
+                if (dto.getCreatedBy() != null) {
+                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
+                    ApiResponse<UserDto> apiResponse = response.getBody();
+
+                    if (apiResponse != null && apiResponse.getData() != null) {
+                        dto.setCreatedByName(apiResponse.getData().getUserName());
+                    } else {
+                        dto.setCreatedByName("Unknown");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
+                dto.setCreatedByName("Unknown");
+            }
+        });
+
+        return dtoPage;
     }
+
 
     public RateTermsConfirmationDTO getRTRById(String rtrId){
 

@@ -28,5 +28,6 @@ public class RateTermsConfirmationDTO {
     private String comments;
     private String createdAt;
     private String createdBy;
+    private String createdByName;
 
 }
