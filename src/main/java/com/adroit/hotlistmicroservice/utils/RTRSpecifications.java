@@ -98,7 +98,7 @@ public class RTRSpecifications {
         return Specification.where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.or(
-                                criteriaBuilder.equal(root.get("salesExecutiveId"),userId),
+                               // criteriaBuilder.equal(root.get("salesExecutiveId"),userId),
                                 criteriaBuilder.equal(root.get("createdBy"), userId)
                         ))
                 .and(createSearchSpecification(keyword))
