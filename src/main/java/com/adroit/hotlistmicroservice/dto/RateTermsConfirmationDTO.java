@@ -27,5 +27,6 @@ public class RateTermsConfirmationDTO {
     private String implementationPartner;
     private String comments;
     private String createdAt;
+    private String createdBy;
 
 }
