@@ -262,22 +262,22 @@ public class ConsultantController {
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
    }
 
-    @GetMapping("/users/filtered-users")
-    public ResponseEntity<Page<UserDto>> getUsersByParams(
-            @RequestParam(required = false) String userId,
-            @RequestParam(required = false) String userName,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate joiningDate,
-            @RequestParam(defaultValue = "userId") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-
-        return userServiceClient.getAllFilteredUsers(
-                page,size, userId, userName, email, joiningDate, sortBy, sortDir
-        );
-    }
+//    @GetMapping("/users/filtered-users")
+//    public ResponseEntity<Page<UserDto>> getUsersByParams(
+//            @RequestParam(required = false) String userId,
+//            @RequestParam(required = false) String userName,
+//            @RequestParam(required = false) String email,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate joiningDate,
+//            @RequestParam(defaultValue = "userId") String sortBy,
+//            @RequestParam(defaultValue = "asc") String sortDir,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//
+//        return userServiceClient.getAllFilteredUsers(
+//                page,size, userId, userName, email, joiningDate, sortBy, sortDir
+//        );
+//    }
 
     @GetMapping("/all-w2-Consultants")
     public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllW2Consultants(

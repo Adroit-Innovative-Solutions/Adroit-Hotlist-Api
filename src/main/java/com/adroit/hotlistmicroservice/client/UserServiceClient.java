@@ -18,17 +18,17 @@ public interface UserServiceClient {
     @GetMapping("/users/allUsers")
      ApiResponse<List<UserDto>> getAllUsers();
 
-    @GetMapping("/allUsers/filters")
-    ResponseEntity<Page<UserDto>> getAllFilteredUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String userId,
-            @RequestParam(required = false) String userName,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate joiningDate,
-            @RequestParam(defaultValue = "userId") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
-    );
+//    @GetMapping("/allUsers/filters")
+//    ResponseEntity<Page<UserDto>> getAllFilteredUsers(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(required = false) String userId,
+//            @RequestParam(required = false) String userName,
+//            @RequestParam(required = false) String email,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate joiningDate,
+//            @RequestParam(defaultValue = "userId") String sortBy,
+//            @RequestParam(defaultValue = "asc") String sortDir
+//    );
 
     @GetMapping("users/user/{userId}")
      ResponseEntity<ApiResponse<UserDto>> getUserByUserID(@PathVariable String userId);
