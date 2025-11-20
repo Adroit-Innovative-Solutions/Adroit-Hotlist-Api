@@ -7,6 +7,8 @@ import com.adroit.hotlistmicroservice.service.ConsultantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +36,7 @@ public class ConsultantController {
     private UserServiceClient userServiceClient;
     @Autowired
     private ConsultantRepo consultantRepo;
+
 
     private static final Logger logger = LoggerFactory.getLogger(ConsultantController.class);
 
@@ -257,5 +261,64 @@ public class ConsultantController {
         ApiResponse apiResponse=new ApiResponse(true,"Modified Approval Status",null,null );
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
    }
+
+    @GetMapping("/users/filtered-users")
+    public ResponseEntity<Page<UserDto>> getUsersByParams(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate joiningDate,
+            @RequestParam(defaultValue = "userId") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        return userServiceClient.getAllFilteredUsers(
+                page,size, userId, userName, email, joiningDate, sortBy, sortDir
+        );
+    }
+
+    @GetMapping("/all-w2-Consultants")
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllW2Consultants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam Map<String, Object> filters,
+            @RequestParam(required = false) String statusFilter
+    ) {
+        logger.info("Incoming Request For Fetching All Consultants.. page {} size {} keyword {}", page, size, keyword);
+
+        Pageable pageable = PageRequest.of(
+                page, size,
+                Sort.Direction.DESC, "updatedTimeStamp"
+        );
+
+        // Fetch full data from service
+        Page<ConsultantDto> consultants =
+                consultantService.getAllConsultants(keyword, filters, pageable, statusFilter);
+
+        // Filter only W2 consultants
+        List<ConsultantDto> w2FilteredList = consultants.getContent()
+                .stream()
+                .filter(a -> "W2".equalsIgnoreCase(a.getPayroll()))
+                .toList();
+
+        // Build new Page object after filtering
+        Page<ConsultantDto> filteredPage = new PageImpl<>(
+                w2FilteredList,
+                pageable,
+                w2FilteredList.size()
+        );
+
+        PageResponse<ConsultantDto> pageResponse = new PageResponse<>(filteredPage);
+
+        ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(
+                true, "Consultants data fetched.", pageResponse, null
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 
 }
