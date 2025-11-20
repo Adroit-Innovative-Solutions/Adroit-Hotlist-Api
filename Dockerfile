@@ -1,5 +1,5 @@
 # -------- Build Stage --------
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-jammy AS builder
 
 RUN apt-get update && \
     apt-get install -y maven curl && \
@@ -15,7 +15,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # -------- Runtime Stage --------
-FROM eclipse-temurin:21-jdk-alpine
+FROM eclipse-temurin:21-jdk-jammy
 
 WORKDIR /app
 
