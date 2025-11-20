@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +35,7 @@ public class ConsultantController {
     private UserServiceClient userServiceClient;
     @Autowired
     private ConsultantRepo consultantRepo;
+
 
     private static final Logger logger = LoggerFactory.getLogger(ConsultantController.class);
 
@@ -257,5 +260,23 @@ public class ConsultantController {
         ApiResponse apiResponse=new ApiResponse(true,"Modified Approval Status",null,null );
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
    }
+
+    @GetMapping("/users/getUsers")
+    public ResponseEntity<Page<UserDto>> getUsersByParams(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate joiningDate,
+            @RequestParam(defaultValue = "userId") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        return userServiceClient.getAllFilteredUsers(
+                page,size, userId, userName, email, joiningDate, sortBy, sortDir
+        );
+    }
 
 }
