@@ -7,17 +7,21 @@ import com.adroit.hotlistmicroservice.service.ConsultantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -36,6 +40,10 @@ public class ConsultantController {
     private UserServiceClient userServiceClient;
     @Autowired
     private ConsultantRepo consultantRepo;
+
+
+    @Autowired
+    RestTemplate restTemplate;
 
 
     private static final Logger logger = LoggerFactory.getLogger(ConsultantController.class);
@@ -303,4 +311,38 @@ public class ConsultantController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @GetMapping("/all-consultants/filters")
+    public ResponseEntity<PageResponse<UserDto>> getAllFilteredUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate joiningDate,
+            @RequestParam(defaultValue = "userId") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        String baseUrl = "http://localhost:8083/users/allUsers/filters";
+
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .queryParam("page", 0)
+                .queryParam("size", 10)
+                .queryParam("userId", userId)
+                .queryParam("userName", userName)
+                .queryParam("email", email)
+                .queryParam("joiningDate", joiningDate)
+                .queryParam("sortBy", "userId")
+                .queryParam("sortDir", "asc");
+
+        ResponseEntity<PageResponse<UserDto>> response =
+                restTemplate.exchange(
+                        builder.toUriString(),
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<PageResponse<UserDto>>() {}
+                );
+        return ResponseEntity.ok(response.getBody());
+    }
+
 }
