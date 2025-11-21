@@ -262,4 +262,45 @@ public class ConsultantController {
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
    }
 
+
+    @GetMapping("/all-w2-Consultants")
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllW2Consultants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam Map<String, Object> filters,
+            @RequestParam(required = false) String statusFilter
+    ) {
+        logger.info("Incoming Request For Fetching All Consultants.. page {} size {} keyword {}", page, size, keyword);
+
+        Pageable pageable = PageRequest.of(
+                page, size,
+                Sort.Direction.DESC, "updatedTimeStamp"
+        );
+
+        // Fetch full data from service
+        Page<ConsultantDto> consultants =
+                consultantService.getAllConsultants(keyword, filters, pageable, statusFilter);
+
+        // Filter only W2 consultants
+        List<ConsultantDto> w2FilteredList = consultants.getContent()
+                .stream()
+                .filter(a -> "W2".equalsIgnoreCase(a.getPayroll()))
+                .toList();
+
+        // Build new Page object after filtering
+        Page<ConsultantDto> filteredPage = new PageImpl<>(
+                w2FilteredList,
+                pageable,
+                w2FilteredList.size()
+        );
+
+        PageResponse<ConsultantDto> pageResponse = new PageResponse<>(filteredPage);
+
+        ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(
+                true, "Consultants data fetched.", pageResponse, null
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
