@@ -323,7 +323,7 @@ public class ConsultantController {
             @RequestParam(defaultValue = "userId") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
-        String baseUrl = "http://localhost:8083/users/allUsers/filters";
+        String baseUrl = "https://mymulya.com/users/allUsers/filters";
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .queryParam("page", 0)
@@ -335,14 +335,19 @@ public class ConsultantController {
                 .queryParam("sortBy", "userId")
                 .queryParam("sortDir", "asc");
 
-        ResponseEntity<PageResponse<UserDto>> response =
-                restTemplate.exchange(
-                        builder.toUriString(),
-                        HttpMethod.GET,
-                        null,
-                        new ParameterizedTypeReference<PageResponse<UserDto>>() {}
-                );
-        return ResponseEntity.ok(response.getBody());
+        try {
+            ResponseEntity<PageResponse<UserDto>> response =
+                    restTemplate.exchange(
+                            builder.toUriString(),
+                            HttpMethod.GET,
+                            null,
+                            new ParameterizedTypeReference<PageResponse<UserDto>>() {
+                            }
+                    );
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
