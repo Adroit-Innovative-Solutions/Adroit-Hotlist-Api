@@ -272,6 +272,8 @@ public class ConsultantService {
             existingConsultant.setSalesExecutiveId(updatedConsultant.getSalesExecutiveId());
         if (updatedConsultant.getSalesExecutive() != null)
             existingConsultant.setSalesExecutive(updatedConsultant.getSalesExecutive());
+        if(updatedConsultant.getDoneBy() != null)
+            existingConsultant.setDoneBy(updatedConsultant.getDoneBy());
         if (updatedConsultant.getRemoteOnsite() != null)
             existingConsultant.setRemoteOnsite(updatedConsultant.getRemoteOnsite());
         if (updatedConsultant.getTechnology() != null)
