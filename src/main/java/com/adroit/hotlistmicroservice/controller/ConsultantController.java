@@ -312,7 +312,7 @@ public class ConsultantController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/all-consultants/filters")
+    @GetMapping("/all-users/filters")
     public ResponseEntity<PageResponse<UserDto>> getAllFilteredUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
