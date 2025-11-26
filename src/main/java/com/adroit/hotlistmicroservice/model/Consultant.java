@@ -26,6 +26,7 @@ public class Consultant {
     private String passport;
     private String salesExecutive;
     private String salesExecutiveId;
+    private String doneBy;
     private String remoteOnsite;
     private String technology;
 
@@ -371,5 +372,13 @@ public class Consultant {
 
     public void setUpdatedBy(String updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public String getDoneBy() {
+        return doneBy;
+    }
+
+    public void setDoneBy(String doneBy) {
+        this.doneBy = doneBy;
     }
 }

@@ -20,6 +20,7 @@ public class ConsultantDto {
     private String passport;
     private String salesExecutive;
     private String salesExecutiveId;
+    private String doneBy;
     private String remoteOnsite;
     private String technology;
     private String experience;
@@ -335,5 +336,13 @@ public class ConsultantDto {
 
     public void setApprovalStatus(String approvalStatus) {
         this.approvalStatus = approvalStatus;
+    }
+
+    public String getDoneBy() {
+        return doneBy;
+    }
+
+    public void setDoneBy(String doneBy) {
+        this.doneBy = doneBy;
     }
 }
