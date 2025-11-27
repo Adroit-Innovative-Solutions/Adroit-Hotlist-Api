@@ -116,6 +116,22 @@ public class RateTermsConfirmationController {
 
 
 
+    @GetMapping("/rtr-list-today")
+    public ResponseEntity<ApiResponse<Page<RateTermsConfirmationDTO>>> getTodayRtrs(
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam (required = false) String keyword,
+            @RequestParam (required = false) Map<String,Object> filters,
+            @RequestParam (required = false) String date
+    ){
+        Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getRTRListByDate(keyword,filters,pageable,date);
+        PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
+
+        ApiResponse apiResponse=new ApiResponse(true,"RTR fetched Successfully",pageResponse,null);
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+
     @DeleteMapping("/delete-rtr/{rtrId}/{userId}")
     public ResponseEntity<ApiResponse<Map<String,Object>>> deleteRTR(
             @PathVariable String rtrId,

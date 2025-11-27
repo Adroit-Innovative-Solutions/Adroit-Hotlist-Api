@@ -134,4 +134,23 @@ public class RTRSpecifications {
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword));
     }
+
+    public static Specification<RateTermsConfirmation> rtrsByDate(String keyword, Map<String, Object> filters, String date) {
+        return Specification.where(isNotDeleted())
+                .and(isCreatedOnDate(date))
+                .and(createFiltersSpecification(filters))
+                .and(createSearchSpecification(keyword));
+    }
+
+    private static Specification<RateTermsConfirmation> isCreatedOnDate(String date) {
+        return (root, query, criteriaBuilder) -> {
+            java.time.LocalDate targetDate = (date != null && !date.isEmpty()) 
+                ? java.time.LocalDate.parse(date) 
+                : java.time.LocalDate.now();
+            return criteriaBuilder.equal(
+                    criteriaBuilder.function("DATE", java.time.LocalDate.class, root.get("createdAt")),
+                    targetDate
+            );
+        };
+    }
 }

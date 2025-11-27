@@ -73,6 +73,12 @@ public class RateTermsConfirmationService {
               .map(rtrMapper::toDtoFromEntity);
     }
 
+    public Page<RateTermsConfirmationDTO> getRTRListByDate(String keyword, Map<String,Object> filters, Pageable pageable, String date){
+
+     return rtrRepository.rtrsByDate(keyword,filters,pageable,date)
+              .map(rtrMapper::toDtoFromEntity);
+    }
+
     public Page<RateTermsConfirmationDTO> getSalesRTRList(String userId,String keyword,Map<String ,Object> filters,Pageable pageable){
 
         return rtrRepository.salesRTRs(userId, keyword, filters, pageable)

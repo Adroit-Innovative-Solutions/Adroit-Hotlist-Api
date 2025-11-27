@@ -31,6 +31,10 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
        return findAll(RTRSpecifications.consultantRTRs(consultantId,keyword,filters),pageable);
    }
 
+   default Page<RateTermsConfirmation> rtrsByDate(String keyword,Map<String,Object> filters,Pageable pageable,String date){
+       return findAll(RTRSpecifications.rtrsByDate(keyword,filters,date),pageable);
+   }
+
    Optional<RateTermsConfirmation> findById(String rtrId);
 
     Optional<RateTermsConfirmation> findByRtrIdAndIsDeleted(String rtrId, Boolean isDeleted);
