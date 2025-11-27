@@ -394,6 +394,14 @@ public class ConsultantService {
         return dtoList;
     }
 
+    public Page<ConsultantDto> getAllW2Consultants(String keyword, Map<String,Object> filters, Pageable pageable, String statusFilter) {
+
+        Page<Consultant> list = consultantRepo.allW2Consultants(keyword,filters,statusFilter,pageable);
+
+        Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
+        return dtoList;
+    }
+
     public ConsultantDto getConsultantByID(String consultantId){
 
         logger.info("Fetching consultant details for Consultant ID: {}",consultantId);

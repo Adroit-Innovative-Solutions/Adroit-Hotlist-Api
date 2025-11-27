@@ -180,6 +180,20 @@ public class ConsultantSpecifications {
                 .and(applyStatusFilter(statusFilter));
      }
 
+     public static Specification<Consultant> allW2ConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
+        return Specification.<Consultant>where(isNotDeleted())
+                .and(isMovedToHotlist())
+                .and(isW2Payroll())
+                .and(createSearchSpecification(keyword))
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
+     }
+
+     public static Specification<Consultant> isW2Payroll(){
+        return ((root, query, criteriaBuilder) -> 
+                criteriaBuilder.equal(criteriaBuilder.lower(root.get("payroll")), "w2"));
+    }
+
      public static  Specification<Consultant> isNotDeleted(){
         return ((root, query, criteriaBuilder) -> criteriaBuilder.isFalse(root.get("isDeleted")));
     }

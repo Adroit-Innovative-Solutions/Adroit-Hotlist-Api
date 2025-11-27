@@ -29,6 +29,10 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
         return findAll(ConsultantSpecifications.allConsultantsSearch(keyword,filters,statusFilter),pageable);
     }
 
+    default Page<Consultant> allW2Consultants(String keyword, Map<String,Object> filters,String statusFilter,Pageable pageable){
+        return findAll(ConsultantSpecifications.allW2ConsultantsSearch(keyword,filters,statusFilter),pageable);
+    }
+
     default Page<Consultant> consultantsByRecruiter(String recruiterId, String keyword, Map<String,Object> filters,String statusFilter,Pageable pageable) {
         return findAll(ConsultantSpecifications.recruiterSearch(recruiterId, keyword,filters,statusFilter), pageable);
     }
@@ -45,5 +49,7 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     }
     @Query("SELECT c.consultantId FROM Consultant c WHERE c.teamLeadId= :teamLeadId AND isDeleted= false")
     List<String> findConsultantIdsByTeamLeadId(@Param("teamLeadId") String teamLeadId);
+
+
 
 }

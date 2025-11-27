@@ -279,34 +279,20 @@ public class ConsultantController {
             @RequestParam Map<String, Object> filters,
             @RequestParam(required = false) String statusFilter
     ) {
-        logger.info("Incoming Request For Fetching All Consultants.. page {} size {} keyword {}", page, size, keyword);
+        logger.info("Incoming Request For Fetching All W2 Consultants.. page {} size {} keyword {}", page, size, keyword);
 
         Pageable pageable = PageRequest.of(
                 page, size,
                 Sort.Direction.DESC, "updatedTimeStamp"
         );
+        
+        Page<ConsultantDto> consultants = consultantService.getAllW2Consultants(keyword, filters, pageable, statusFilter);
+        
 
-        // Fetch full data from service
-        Page<ConsultantDto> consultants =
-                consultantService.getAllConsultants(keyword, filters, pageable, statusFilter);
-
-        // Filter only W2 consultants
-        List<ConsultantDto> w2FilteredList = consultants.getContent()
-                .stream()
-                .filter(a -> "W2".equalsIgnoreCase(a.getPayroll()))
-                .toList();
-
-        // Build new Page object after filtering
-        Page<ConsultantDto> filteredPage = new PageImpl<>(
-                w2FilteredList,
-                pageable,
-                w2FilteredList.size()
-        );
-
-        PageResponse<ConsultantDto> pageResponse = new PageResponse<>(filteredPage);
-
+        
+        PageResponse<ConsultantDto> pageResponse = new PageResponse<>(consultants);
         ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(
-                true, "Consultants data fetched.", pageResponse, null
+                true, "W2 Consultants data fetched.", pageResponse, null
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
