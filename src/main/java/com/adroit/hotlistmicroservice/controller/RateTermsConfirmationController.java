@@ -48,7 +48,7 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) String keyword,
             @RequestParam (required = false) Map<String,Object> filters
     ){
-        Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
+        Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getRTRList(keyword,filters,pageable);
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
 
