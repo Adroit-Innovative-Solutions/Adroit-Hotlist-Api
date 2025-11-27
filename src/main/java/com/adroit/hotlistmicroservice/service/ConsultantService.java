@@ -487,10 +487,25 @@ public class ConsultantService {
         logger.info("Found {} consultants for TeamLead {}",hotListDtoPage.getTotalElements(),userId);
        return hotListDtoPage;
     }
-    public Page<UserDto> getAllUSEntityUsers(Pageable pageable){
+    public Page<UserDto> getAllUSEntityUsers(Pageable pageable, String search){
         logger.info("Fetching the All US Users...");
         List<UserDto> users=userServiceClient.getAllUsers().getData().stream()
                 .filter(user -> user.getEntity().equalsIgnoreCase("US"))
+                .filter(user -> {
+                    // If search is null or empty, return all users
+                    if (search == null || search.trim().isEmpty()) {
+                        return true;
+                    }
+
+                    // Convert search term to lowercase for case-insensitive search
+                    String searchTerm = search.toLowerCase().trim();
+
+                    // Search in name, email, role, and phonenumber fields
+                    return (user.getUserName() != null && user.getUserName().toLowerCase().contains(searchTerm)) ||
+                            (user.getEmail() != null && user.getEmail().toLowerCase().contains(searchTerm)) ||
+                            (user.getRoles() != null && user.getRoles().stream().anyMatch(role -> role != null && role.toString().toLowerCase().contains(searchTerm))) ||
+                            (user.getPhoneNumber() != null && user.getPhoneNumber().contains(searchTerm));
+                })
                 .collect(Collectors.toList());
 
         int start=Math.min((int) pageable.getOffset(),users.size());
