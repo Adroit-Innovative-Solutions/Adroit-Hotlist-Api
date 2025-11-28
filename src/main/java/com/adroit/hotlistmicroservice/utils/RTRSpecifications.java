@@ -103,9 +103,6 @@ public class RTRSpecifications {
             if (fromDate == null && toDate == null) {
                 return null;
             }
-            // Add logging
-            System.out.println("Spec - fromDate: " + fromDate);
-            System.out.println("Spec - toDate: " + toDate);
 
             if (fromDate != null && toDate != null) {
                 // Both dates provided - range filter

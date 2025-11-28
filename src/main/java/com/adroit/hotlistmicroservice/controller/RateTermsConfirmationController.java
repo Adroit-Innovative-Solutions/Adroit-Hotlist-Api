@@ -65,12 +65,6 @@ public class RateTermsConfirmationController {
         LocalDateTime fromDateTime = fromDate != null ? fromDate.atStartOfDay() : null;
         LocalDateTime toDateTime = toDate != null ? toDate.atTime(23, 59, 59) : null;
 
-        // Add logging to debug
-        System.out.println("fromDate: " + fromDate);
-        System.out.println("toDate: " + toDate);
-        System.out.println("fromDateTime: " + fromDateTime);
-        System.out.println("toDateTime: " + toDateTime);
-
         Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getRTRList(keyword,fromDateTime,toDateTime,filters,pageable);
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
