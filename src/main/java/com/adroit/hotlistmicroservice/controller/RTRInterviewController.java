@@ -68,7 +68,7 @@ public class RTRInterviewController {
       Pageable pageable= PageRequest.of(
               page,
               size,
-              Sort.Direction.DESC,"updatedAt");
+              Sort.Direction.DESC,"createdAt");
 
        Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getAllInterviews(keyword,filters,pageable);
        PageResponse pageResponse=new PageResponse(rtrInterviewDtoPage);
