@@ -5,6 +5,9 @@ import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,11 +89,32 @@ public class RTRSpecifications {
         });
     }
 
-    public static Specification<RateTermsConfirmation> allRTRs(String keyword,Map<String,Object> filters){
+    public static Specification<RateTermsConfirmation> allRTRs(String keyword, LocalDateTime fromDate, LocalDateTime toDate, Map<String,Object> filters){
 
         return Specification.where(isNotDeleted())
+                .and(createDateRangeSpecification(fromDate, toDate))
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword));
+
+    }
+
+    private static Specification<RateTermsConfirmation> createDateRangeSpecification(LocalDateTime fromDate, LocalDateTime toDate) {
+        return (root, query, criteriaBuilder) -> {
+            if (fromDate == null && toDate == null) {
+                return null;
+            }
+
+            if (fromDate != null && toDate != null) {
+                // Both dates provided - range filter
+                return criteriaBuilder.between(root.get("createdAt"), fromDate, toDate);
+            } else if (fromDate != null) {
+                // Only from date - greater than or equal
+                return criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), fromDate);
+            } else {
+                // Only to date - less than or equal
+                return criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), toDate);
+            }
+        };
     }
 
     public static Specification<RateTermsConfirmation> salesRTRs(String userId,String keyword,Map<String,Object> filters){

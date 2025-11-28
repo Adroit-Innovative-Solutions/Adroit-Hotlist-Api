@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,8 +17,8 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
 
     Optional<RateTermsConfirmation> findTopByOrderByRtrIdDesc();
 
-   default Page<RateTermsConfirmation> allRTRs(String keyword, Map<String,Object> filters, Pageable pageable){
-      return findAll(RTRSpecifications.allRTRs(keyword,filters),pageable);
+   default Page<RateTermsConfirmation> allRTRs(String keyword, LocalDateTime fromDate, LocalDateTime toDate,Map<String, Object> filters, Pageable pageable){
+      return findAll(RTRSpecifications.allRTRs(keyword, fromDate, toDate, filters),pageable);
    }
 
    default Page<RateTermsConfirmation> salesRTRs(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
