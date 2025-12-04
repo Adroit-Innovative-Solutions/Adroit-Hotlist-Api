@@ -531,6 +531,16 @@ public class ConsultantService {
         Page<Consultant> pageableYetToOnBoardList=consultantRepo.yetToOnBoardConsultants(keyword,filters,statusFilter,pageable);
          return pageableYetToOnBoardList.map(consultantMapper::toDTO);
     }
+
+    public Page<ConsultantDto> getOnHoldConsultants(String keyword, Pageable pageable, Map<String,Object> filters, String statusFilter){
+        Page<Consultant> pageableOnHoldList=consultantRepo.onHoldConsultants(keyword,filters,statusFilter,pageable);
+        return pageableOnHoldList.map(consultantMapper::toDTO);
+    }
+
+    public Page<ConsultantDto> getActiveConsultants(String keyword, Pageable pageable, Map<String,Object> filters, String statusFilter){
+        Page<Consultant> pageableActiveList=consultantRepo.activeConsultants(keyword,filters,statusFilter,pageable);
+        return pageableActiveList.map(consultantMapper::toDTO);
+    }
     public ConsultantAddedResponse moveToHotlist(String consultantId,String userId){
         Optional<Consultant> optionalConsultant=consultantRepo.findById(consultantId);
         if(optionalConsultant.isEmpty()){

@@ -12,11 +12,17 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Map;
 
+
+
+
+
 public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpecificationExecutor<Consultant> {
 
 
     @Query("SELECT MAX(consultantId) FROM Consultant WHERE consultantId LIKE 'CONS%'")
     String findMaxConsultantId();
+
+
 
     List<Consultant> findByEmailIdAndPersonalContact(String emailId, String personalContact);
 
@@ -46,6 +52,14 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     }
     default Page<Consultant> yetToOnBoardConsultants(String keyword,Map<String,Object> filters, String statusFilter,Pageable pageable) {
         return findAll(ConsultantSpecifications.yetToOnBoardConsultants(keyword,filters,statusFilter),pageable);
+    }
+
+    default Page<Consultant> onHoldConsultants(String keyword, Map<String,Object> filters, String statusFilter, Pageable pageable) {
+        return findAll(ConsultantSpecifications.onHoldConsultants(keyword,filters,statusFilter),pageable);
+    }
+
+    default Page<Consultant> activeConsultants(String keyword, Map<String,Object> filters, String statusFilter, Pageable pageable) {
+        return findAll(ConsultantSpecifications.activeConsultants(keyword,filters,statusFilter),pageable);
     }
     @Query("SELECT c.consultantId FROM Consultant c WHERE c.teamLeadId= :teamLeadId AND isDeleted= false")
     List<String> findConsultantIdsByTeamLeadId(@Param("teamLeadId") String teamLeadId);

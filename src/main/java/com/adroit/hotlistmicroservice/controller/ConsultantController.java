@@ -242,6 +242,36 @@ public class ConsultantController {
         ApiResponse apiResponse=new ApiResponse(true,"Fetched Yet On Board Consultants",response,null);
     return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
+
+    @GetMapping("/onHoldConsultants")
+    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getOnHoldConsultants(
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam (required = false) String keyword,
+            @RequestParam Map<String,Object> filters,
+            @RequestParam (required = false)String statusFilter
+    ){
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedTimeStamp");
+        Page<ConsultantDto> pageResponse=consultantService.getOnHoldConsultants(keyword,pageable,filters,statusFilter);
+        PageResponse<ConsultantDto> response=new PageResponse<>(pageResponse);
+        ApiResponse apiResponse=new ApiResponse(true,"Fetched On Hold Consultants",response,null);
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+
+    @GetMapping("/activeConsultants")
+    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getActiveConsultants(
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam (required = false) String keyword,
+            @RequestParam Map<String,Object> filters,
+            @RequestParam (required = false)String statusFilter
+    ){
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedTimeStamp");
+        Page<ConsultantDto> pageResponse=consultantService.getActiveConsultants(keyword,pageable,filters,statusFilter);
+        PageResponse<ConsultantDto> response=new PageResponse<>(pageResponse);
+        ApiResponse apiResponse=new ApiResponse(true,"Fetched Active Consultants",response,null);
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
     @PatchMapping("/moveToHotlist/{consultantId}")
     public ResponseEntity<ApiResponse<ConsultantAddedResponse>> movedToHotList(
             @PathVariable String consultantId,
