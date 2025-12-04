@@ -32,6 +32,7 @@ public class RTRInterview extends BaseEntity {
     private String zoomLink;
     private int duration;
     private Boolean isPlaced;
+    private String remarks;
 
     @Lob
     @Column(name = "interview_history", columnDefinition = "TEXT")

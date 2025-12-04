@@ -114,6 +114,17 @@ public class RateTermsConfirmationService {
         return dtoPage;
     }
 
+    public Page<RateTermsConfirmationDTO> getSalesRTRListByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {
+        return rtrRepository.salesRTRsByDate(userId, keyword, filters, pageable, date)
+                .map(rtrMapper::toDtoFromEntity);
+    }
+
+    public Page<RateTermsConfirmationDTO> getTeamRtrsByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {
+        List<String> teamConsultants = consultantRepo.findConsultantIdsByTeamLeadId(userId);
+        return rtrRepository.teamRtrsByDate(teamConsultants, keyword, filters, pageable, date)
+                .map(rtrMapper::toDtoFromEntity);
+    }
+
 
     public RateTermsConfirmationDTO getRTRById(String rtrId){
 

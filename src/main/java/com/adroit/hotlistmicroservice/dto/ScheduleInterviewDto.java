@@ -16,5 +16,6 @@ public class ScheduleInterviewDto {
     private LocalDateTime interviewDateTime;
     private String interviewerEmailId;
     private String zoomLink;
+    private String remarks;
 
 }

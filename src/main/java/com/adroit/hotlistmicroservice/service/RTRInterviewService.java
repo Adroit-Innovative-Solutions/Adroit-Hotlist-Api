@@ -54,6 +54,7 @@ public class RTRInterviewService {
        interview.setInterviewerEmailId(interviewDto.getInterviewerEmailId());
        interview.setZoomLink(interviewDto.getZoomLink());
        interview.setCreatedBy(userId);
+       interview.setRemarks(interviewDto.getRemarks());
        interview.setCreatedAt(LocalDateTime.now());
        interview.setUpdatedAt(LocalDateTime.now());
 

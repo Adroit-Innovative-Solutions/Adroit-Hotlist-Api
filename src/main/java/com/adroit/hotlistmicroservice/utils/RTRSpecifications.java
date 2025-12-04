@@ -142,6 +142,29 @@ public class RTRSpecifications {
                 .and(createSearchSpecification(keyword));
     }
 
+    public static Specification<RateTermsConfirmation> salesRTRsByDate(String userId, String keyword, Map<String, Object> filters, String date) {
+        return Specification.where(isNotDeleted())
+                .and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("createdBy"), userId))
+                .and(isCreatedOnDate(date))
+                .and(createFiltersSpecification(filters))
+                .and(createSearchSpecification(keyword));
+    }
+
+    public static Specification<RateTermsConfirmation> teamRtrsByDate(List<String> consultantIds, String keyword, Map<String, Object> filters, String date) {
+        return Specification.where(isNotDeleted())
+                .and((root, query, criteriaBuilder) -> {
+                    if (consultantIds != null && !consultantIds.isEmpty()) {
+                        return root.get("consultantId").in(consultantIds);
+                    } else {
+                        return criteriaBuilder.conjunction();
+                    }
+                })
+                .and(isCreatedOnDate(date))
+                .and(createFiltersSpecification(filters))
+                .and(createSearchSpecification(keyword));
+    }
+
     private static Specification<RateTermsConfirmation> isCreatedOnDate(String date) {
         return (root, query, criteriaBuilder) -> {
             java.time.LocalDate targetDate = (date != null && !date.isEmpty()) 

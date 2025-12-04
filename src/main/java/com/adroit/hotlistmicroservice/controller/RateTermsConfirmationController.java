@@ -64,7 +64,7 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) String keyword,
             @RequestParam (required = false) Map<String,Object> filters
     ){
-        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedAt");
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getSalesRTRList(userId,keyword,filters,pageable);
 
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
@@ -81,8 +81,44 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) String keyword,
             @RequestParam (required = false) Map<String,Object> filters
     ){
-        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedAt");
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getTeamRtrs(userId,keyword,filters,pageable);
+
+        PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
+
+        ApiResponse apiResponse=new ApiResponse(true,"RTR Data Fetched Successfully",pageResponse,null);
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+
+    @GetMapping("/salesRtr-list-today/{userId}")
+    public ResponseEntity<ApiResponse<Page<RateTermsConfirmationDTO>>> getSalesRTRSByDate(
+            @PathVariable String userId,
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam (required = false) String keyword,
+            @RequestParam (required = false) Map<String,Object> filters,
+            @RequestParam (required = false) String date
+    ){
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getSalesRTRListByDate(userId,keyword,filters,pageable,date);
+
+        PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
+
+        ApiResponse apiResponse=new ApiResponse(true,"RTR Data Fetched Successfully",pageResponse,null);
+        return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+    }
+
+    @GetMapping("/teamRtr-list-today/{userId}")
+    public ResponseEntity<ApiResponse<Page<RateTermsConfirmationDTO>>> getTeamRtrsByDate(
+            @PathVariable String userId,
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam (required = false) String keyword,
+            @RequestParam (required = false) Map<String,Object> filters,
+            @RequestParam (required = false) String date
+    ){
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getTeamRtrsByDate(userId,keyword,filters,pageable,date);
 
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
 
@@ -106,7 +142,7 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) String keyword,
             @RequestParam (required = false) Map<String,Object> filters
     ){
-        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"updatedAt");
+        Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
 
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getRTRByConsultant(consultantId,keyword,filters,pageable);
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
@@ -124,7 +160,7 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) Map<String,Object> filters,
             @RequestParam (required = false) String date
     ){
-        Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
+        Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getRTRListByDate(keyword,filters,pageable,date);
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
 
