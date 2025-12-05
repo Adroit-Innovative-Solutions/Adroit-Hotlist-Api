@@ -213,7 +213,7 @@ public class ConsultantSpecifications {
     public static Specification<Consultant> onHoldConsultants(String keyword, Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.equal(criteriaBuilder.lower(root.get("status")), "on hold"))
+                        criteriaBuilder.equal(criteriaBuilder.lower(root.get("status")), "Active"))
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters))
                 .and(applyStatusFilter(statusFilter));
@@ -222,7 +222,7 @@ public class ConsultantSpecifications {
     public static Specification<Consultant> activeConsultants(String keyword, Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.notEqual(criteriaBuilder.lower(root.get("status")), "on hold"))
+                        criteriaBuilder.notEqual(criteriaBuilder.lower(root.get("status")), "Active"))
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters))
                 .and(applyStatusFilter(statusFilter));
