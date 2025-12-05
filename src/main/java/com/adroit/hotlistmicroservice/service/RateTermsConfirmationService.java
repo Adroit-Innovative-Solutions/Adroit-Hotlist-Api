@@ -69,8 +69,26 @@ public class RateTermsConfirmationService {
 
     public Page<RateTermsConfirmationDTO> getRTRList(String keyword, LocalDateTime fromDate, LocalDateTime toDate, Map<String,Object> filters,Pageable pageable){
 
-     return rtrRepository.allRTRs(keyword, fromDate, toDate,filters,pageable)
-              .map(rtrMapper::toDtoFromEntity);
+        Page<RateTermsConfirmationDTO> map = rtrRepository.allRTRs(keyword, fromDate, toDate, filters, pageable)
+                .map(rtrMapper::toDtoFromEntity);
+        map.forEach(dto -> {
+            try {
+                if (dto.getCreatedBy() != null) {
+                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
+                    ApiResponse<UserDto> apiResponse = response.getBody();
+
+                    if (apiResponse != null && apiResponse.getData() != null) {
+                        dto.setCreatedByName(apiResponse.getData().getUserName());
+                    } else {
+                        dto.setCreatedByName("Unknown");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
+                dto.setCreatedByName("Unknown");
+            }
+        });
+        return map;
     }
 
     public Page<RateTermsConfirmationDTO> getRTRListByDate(String keyword, Map<String,Object> filters, Pageable pageable, String date){
