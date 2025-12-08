@@ -244,7 +244,7 @@ public class ConsultantController {
     }
 
     @GetMapping("/onHoldConsultants")
-    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getOnHoldConsultants(
+    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getOnHoldConsultantsGetYetOnBoardConsultants(
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
@@ -259,7 +259,7 @@ public class ConsultantController {
     }
 
     @GetMapping("/activeConsultants")
-    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getActiveConsultants(
+    public ResponseEntity<ApiResponse<Page<ConsultantDto>>> getActiveConsultantsGetYetOnBoardConsultants(
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
