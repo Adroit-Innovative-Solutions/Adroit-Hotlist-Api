@@ -27,5 +27,5 @@ public class RTRInterviewDto {
     private String zoomLink;
     private int duration;
     private Boolean isPlaced;
-
+    private String createdBy;
 }
