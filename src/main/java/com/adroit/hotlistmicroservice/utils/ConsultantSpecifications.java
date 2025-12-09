@@ -175,23 +175,41 @@ public class ConsultantSpecifications {
      public static Specification<Consultant> allConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
                 .and(isMovedToHotlist())
+                .and(isOtherFullTime())
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters))
                 .and(applyStatusFilter(statusFilter));
      }
 
-     public static Specification<Consultant> allW2ConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
+    public static Specification<Consultant> allW2ConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
                 .and(isMovedToHotlist())
                 .and(isW2Payroll())
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters))
                 .and(applyStatusFilter(statusFilter));
-     }
+    }
 
-     public static Specification<Consultant> isW2Payroll(){
-        return ((root, query, criteriaBuilder) -> 
+    public static Specification<Consultant> isW2Payroll(){
+        return ((root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(criteriaBuilder.lower(root.get("payroll")), "w2"));
+    }
+    public static Specification<Consultant> isOtherFullTime(){
+        return ((root, query, criteriaBuilder) ->
+                criteriaBuilder.notEqual(criteriaBuilder.lower(root.get("payroll")), "FULLTIME"));
+    }
+    public static Specification<Consultant> allFullTimeConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
+        return Specification.<Consultant>where(isNotDeleted())
+                .and(isMovedToHotlist())
+                .and(isFullTimePayroll())
+                .and(createSearchSpecification(keyword))
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
+    }
+
+    public static Specification<Consultant> isFullTimePayroll(){
+        return ((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(criteriaBuilder.lower(root.get("payroll")), "FULLTIME"));
     }
 
      public static  Specification<Consultant> isNotDeleted(){

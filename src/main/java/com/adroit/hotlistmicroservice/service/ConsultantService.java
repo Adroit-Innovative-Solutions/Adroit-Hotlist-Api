@@ -696,4 +696,9 @@ public class ConsultantService {
         }
     }
 
+    public Page<ConsultantDto> getAllFullTimeConsultants(String keyword, Map<String, Object> filters, Pageable pageable, String statusFilter) {
+            Page<Consultant> list = consultantRepo.allFullTimeConsultants(keyword,filters,statusFilter,pageable);
+            Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
+            return dtoList;
+    }
 }
