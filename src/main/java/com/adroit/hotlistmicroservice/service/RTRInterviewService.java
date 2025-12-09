@@ -1,9 +1,7 @@
 package com.adroit.hotlistmicroservice.service;
 
-import com.adroit.hotlistmicroservice.dto.InterviewAddedDto;
-import com.adroit.hotlistmicroservice.dto.RTRInterviewDto;
-import com.adroit.hotlistmicroservice.dto.ScheduleInterviewDto;
-import com.adroit.hotlistmicroservice.dto.UpdateInterviewDto;
+import com.adroit.hotlistmicroservice.client.UserServiceClient;
+import com.adroit.hotlistmicroservice.dto.*;
 import com.adroit.hotlistmicroservice.exception.ResourceNotFoundException;
 import com.adroit.hotlistmicroservice.mapper.RTRInterviewMapper;
 import com.adroit.hotlistmicroservice.model.RTRInterview;
@@ -17,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,6 +33,9 @@ public class RTRInterviewService {
     RTRInterviewMapper rtrInterviewMapper;
     @Autowired
     ConsultantRepo consultantRepo;
+
+    @Autowired
+    private UserServiceClient userServiceClient;
 
 
     public InterviewAddedDto scheduleInterview(ScheduleInterviewDto interviewDto,String userId) {
@@ -141,8 +143,27 @@ public class RTRInterviewService {
 
     public Page<RTRInterviewDto> getAllInterviews(String keyword, Map<String,Object> filters, Pageable pageable){
 
-      return rtrInterviewRepository.allInterviews(keyword, filters, pageable)
+        Page<RTRInterviewDto> map = rtrInterviewRepository.allInterviews(keyword, filters, pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
+
+        map.forEach(dto -> {
+            try {
+                if (dto.getCreatedBy() != null) {
+                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
+                    ApiResponse<UserDto> apiResponse = response.getBody();
+
+                    if (apiResponse != null && apiResponse.getData() != null) {
+                        dto.setCreatedBy(apiResponse.getData().getUserName());
+                    } else {
+                        dto.setCreatedBy("Unknown");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
+                dto.setCreatedBy("Unknown");
+            }
+        });
+        return map;
     }
 
     public Page<RTRInterviewDto> getSalesInterviews(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
