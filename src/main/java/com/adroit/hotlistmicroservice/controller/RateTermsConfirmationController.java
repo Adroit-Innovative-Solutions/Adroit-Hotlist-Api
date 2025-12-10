@@ -1,6 +1,7 @@
 package com.adroit.hotlistmicroservice.controller;
 
 import com.adroit.hotlistmicroservice.dto.*;
+import com.adroit.hotlistmicroservice.service.DirectRTRFileService;
 import com.adroit.hotlistmicroservice.service.RateTermsConfirmationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -9,11 +10,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 @CrossOrigin(origins = {"http://35.188.150.92", "http://192.168.0.140:3000", "http://192.168.0.139:3000","https://mymulya.com","http://localhost:3000","http://192.168.0.135:8080","http://192.168.0.135",
         "http://182.18.177.16","http://192.168.1.151:3000","http://192.168.0.193:3000"})
@@ -23,6 +28,9 @@ public class RateTermsConfirmationController {
 
     @Autowired
     RateTermsConfirmationService rtrService;
+
+    @Autowired
+    DirectRTRFileService directRTRFileService;
 
     @PostMapping("/create-rtr/{userId}")
     public ResponseEntity<ApiResponse<RTRAddedResponse>> createRateConfirmation(
@@ -196,4 +204,23 @@ public class RateTermsConfirmationController {
 
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
+
+    @PostMapping(value = "/create-direct-rtr/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<RTRAddedResponse>> createDirectRTR(
+            @PathVariable String userId,
+            @RequestPart("rateTerms") RateTermsConfirmationRequest rateTermsConfirmationRequest,
+            @RequestPart("hotList") ConsultantDto hotList,
+            @RequestPart(value = "resumes", required = false) List<MultipartFile> resumes,
+            @RequestPart(value = "documents", required = false) List<MultipartFile> documents,
+            @RequestParam(value = "isAssignAll", required = false, defaultValue = "false") boolean isAssignAll
+    ) throws IOException {
+
+        ApiResponse<RTRAddedResponse> apiResponse = directRTRFileService.addRTR(
+                userId, rateTermsConfirmationRequest, hotList, resumes, documents, isAssignAll
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+    }
+
+
 }
