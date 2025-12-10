@@ -65,5 +65,7 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     List<String> findConsultantIdsByTeamLeadId(@Param("teamLeadId") String teamLeadId);
 
 
-
+    default  Page<Consultant> allFullTimeConsultants(String keyword, Map<String, Object> filters, String statusFilter, Pageable pageable){
+        return findAll(ConsultantSpecifications.allFullTimeConsultantsSearch(keyword,filters,statusFilter),pageable);
+    }
 }
