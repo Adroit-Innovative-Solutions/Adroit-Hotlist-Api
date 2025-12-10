@@ -28,6 +28,4 @@ public class RTRInterviewDto {
     private int duration;
     private Boolean isPlaced;
     private String createdBy;
-
-    private String createdBy;
 }

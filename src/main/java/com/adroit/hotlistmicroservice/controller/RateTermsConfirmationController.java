@@ -1,7 +1,6 @@
 package com.adroit.hotlistmicroservice.controller;
 
 import com.adroit.hotlistmicroservice.dto.*;
-import com.adroit.hotlistmicroservice.dto.DirectRTRRequest;
 import com.adroit.hotlistmicroservice.service.DirectRTRFileService;
 import com.adroit.hotlistmicroservice.service.RateTermsConfirmationService;
 import org.springframework.beans.factory.annotation.Autowired;
