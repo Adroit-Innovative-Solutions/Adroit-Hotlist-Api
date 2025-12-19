@@ -17,6 +17,7 @@ public class RTRInterviewDto {
     private String consultantEmailId;
     private String technology;
     private String clientId;
+    private String remarks;
     private String clientName;
     private String salesExecutiveId;
     private String salesExecutive;

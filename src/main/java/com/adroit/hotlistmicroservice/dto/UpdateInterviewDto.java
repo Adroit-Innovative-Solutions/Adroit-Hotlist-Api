@@ -17,6 +17,7 @@ public class UpdateInterviewDto {
     private String interviewerEmailId;
     private String zoomLink;
     private int duration;
+    private String remarks;
 
 
 }
