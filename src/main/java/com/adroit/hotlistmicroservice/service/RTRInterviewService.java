@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -141,9 +142,9 @@ public class RTRInterviewService {
                 .orElseThrow(()-> new ResourceNotFoundException("No Interview Found With ID :"+interviewId));
     }
 
-    public Page<RTRInterviewDto> getAllInterviews(String keyword, Map<String,Object> filters, Pageable pageable){
+    public Page<RTRInterviewDto> getAllInterviews(String keyword, Map<String,Object> filters, LocalDate fromDate, LocalDate toDate, Pageable pageable){
 
-        Page<RTRInterviewDto> map = rtrInterviewRepository.allInterviews(keyword, filters, pageable)
+        Page<RTRInterviewDto> map = rtrInterviewRepository.allInterviews(keyword, filters, fromDate, toDate,pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
 
         map.forEach(dto -> {
