@@ -7,10 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -64,13 +66,21 @@ public class RTRInterviewController {
           @RequestParam(defaultValue = "0") int page,
           @RequestParam(defaultValue = "10") int size,
           @RequestParam (required = false) String keyword,
-          @RequestParam (required = false) Map<String,Object> filters){
+          @RequestParam (required = false) Map<String,Object> filters,
+          @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate fromDate,
+
+          @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate toDate
+          ){
       Pageable pageable= PageRequest.of(
               page,
               size,
               Sort.Direction.DESC,"createdAt");
 
-       Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getAllInterviews(keyword,filters,pageable);
+       Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getAllInterviews(keyword,filters,fromDate,toDate,pageable);
        PageResponse pageResponse=new PageResponse(rtrInterviewDtoPage);
        ApiResponse apiResponse=new ApiResponse(true,"Interviews Fetched Successfully",pageResponse,null);
 

@@ -6,6 +6,10 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.boot.autoconfigure.rsocket.RSocketProperties;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -84,10 +88,43 @@ public class RTRInterviewSpecification {
         });
     }
 
-    public static Specification<RTRInterview> allInterviews(String keyword, Map<String, Object> filters){
+    public static Specification<RTRInterview> createdAtDateFilter(
+            LocalDate fromDate,
+            LocalDate toDate) {
+
+        return (root, query, cb) -> {
+
+            if (fromDate == null && toDate == null) {
+                return cb.conjunction();
+            }
+
+            // Same-day filtering when only one date is provided
+            if (fromDate != null && toDate == null) {
+                LocalDateTime start = fromDate.atStartOfDay();
+                LocalDateTime end = fromDate.atTime(LocalTime.MAX);
+                return cb.between(root.get("createdAt"), start, end);
+            }
+
+            if (fromDate == null && toDate != null) {
+                LocalDateTime start = toDate.atStartOfDay();
+                LocalDateTime end = toDate.atTime(LocalTime.MAX);
+                return cb.between(root.get("createdAt"), start, end);
+            }
+
+            // Range filtering when both dates are provided
+            LocalDateTime start = fromDate.atStartOfDay();
+            LocalDateTime end = toDate.atTime(LocalTime.MAX);
+
+            return cb.between(root.get("createdAt"), start, end);
+        };
+    }
+
+
+    public static Specification<RTRInterview> allInterviews(String keyword, Map<String, Object> filters, LocalDate fromDate, LocalDate toDate){
         return Specification.where(isNotDeleted())
                 .and(createFiltersSpecification(filters))
-                .and(createSearchSpecification(keyword));
+                .and(createSearchSpecification(keyword))
+                .and(createdAtDateFilter(fromDate, toDate));
     }
 
     public static Specification<RTRInterview> salesInterviews(String keyword,Map<String,Object> filters,String userId){
