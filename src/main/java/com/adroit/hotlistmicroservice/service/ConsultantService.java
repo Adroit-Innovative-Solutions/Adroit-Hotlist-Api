@@ -701,4 +701,10 @@ public class ConsultantService {
             Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
             return dtoList;
     }
+
+    public Page<ConsultantDto> getAllGuestHouseConsultants(String keyword, Map<String, Object> filters, Pageable pageable, String statusFilter) {
+        Page<Consultant> list = consultantRepo.allGuestHouseConsultants(keyword,filters,statusFilter,pageable);
+        Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
+        return dtoList;
+    }
 }

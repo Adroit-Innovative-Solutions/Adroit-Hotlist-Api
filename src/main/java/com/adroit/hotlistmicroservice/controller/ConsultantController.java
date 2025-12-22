@@ -356,6 +356,32 @@ public class ConsultantController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+    @GetMapping("/all-guest-house-Consultants")
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getAllGuestHouseConsultants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam Map<String, Object> filters,
+            @RequestParam(required = false) String statusFilter
+    ) {
+        logger.info("Incoming Request For Fetching All W2 Consultants.. page {} size {} keyword {}", page, size, keyword);
+
+        Pageable pageable = PageRequest.of(
+                page, size,
+                Sort.Direction.DESC, "updatedTimeStamp"
+        );
+
+        Page<ConsultantDto> consultants = consultantService.getAllGuestHouseConsultants(keyword, filters, pageable, statusFilter);
+
+
+
+        PageResponse<ConsultantDto> pageResponse = new PageResponse<>(consultants);
+        ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(
+                true, "FullTime Consultants data fetched.", pageResponse, null
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @GetMapping("/all-users/filters")
     public ResponseEntity<PageResponse<UserDto>> getAllFilteredUsers(

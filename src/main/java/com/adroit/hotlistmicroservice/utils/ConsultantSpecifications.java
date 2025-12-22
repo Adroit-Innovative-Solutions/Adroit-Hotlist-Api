@@ -2,6 +2,7 @@ package com.adroit.hotlistmicroservice.utils;
 
 import com.adroit.hotlistmicroservice.model.Consultant;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -196,7 +197,7 @@ public class ConsultantSpecifications {
     }
     public static Specification<Consultant> isOtherFullTime(){
         return ((root, query, criteriaBuilder) ->
-                criteriaBuilder.notEqual(criteriaBuilder.lower(root.get("payroll")), "FULLTIME"));
+                criteriaBuilder.notEqual(criteriaBuilder.lower(root.get("payroll")), "FULL-TIME"));
     }
     public static Specification<Consultant> allFullTimeConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
@@ -209,7 +210,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> isFullTimePayroll(){
         return ((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(criteriaBuilder.lower(root.get("payroll")), "FULLTIME"));
+                criteriaBuilder.equal(criteriaBuilder.lower(root.get("payroll")), "FULL-TIME"));
     }
 
      public static  Specification<Consultant> isNotDeleted(){
@@ -257,5 +258,19 @@ public class ConsultantSpecifications {
             }
             return criteriaBuilder.equal(criteriaBuilder.lower(root.get("status")), statusFilter.toLowerCase());
         };
+    }
+
+    public static Specification<Consultant> getAllGuestHouseConsultants(String keyword, Map<String, Object> filters, String statusFilter) {
+        return Specification.<Consultant>where(isNotDeleted())
+                .and(isMovedToHotlist())
+                .and(isGuestHousePayroll())
+                .and(createSearchSpecification(keyword))
+                .and(createFiltersSpecification(filters))
+                .and(applyStatusFilter(statusFilter));
+    }
+
+    public static Specification<Consultant> isGuestHousePayroll(){
+        return ((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(criteriaBuilder.lower(root.get("payroll")), "GUEST-HOUSE"));
     }
 }
