@@ -57,7 +57,7 @@ public class ConsultantController {
     ) throws IOException {
 
         logger.info("In Coming Request For New Adding Consultant");
-        ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList, resumes, documents,isAssignAll);
+        ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList, resumes, documents,isAssignAll,false);
         ApiResponse<ConsultantAddedResponse> response=new ApiResponse<>(true,"Consultant Created",consultantResponse,null);
 
         return new ResponseEntity<>(response, HttpStatus.OK);

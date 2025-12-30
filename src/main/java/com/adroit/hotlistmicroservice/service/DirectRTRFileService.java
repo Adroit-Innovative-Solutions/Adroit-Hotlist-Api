@@ -20,7 +20,7 @@ public class DirectRTRFileService {
 
     @Transactional
     public ApiResponse<RTRAddedResponse> addRTR(String userId, RateTermsConfirmationRequest directRTRRequest, ConsultantDto hotList, List<MultipartFile> resumes, List<MultipartFile> documents, boolean isAssignAll) throws IOException {
-        ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList, resumes, documents,isAssignAll);
+        ConsultantAddedResponse consultantResponse = consultantService.addConsultant(hotList, resumes, documents,isAssignAll, true);
         directRTRRequest.setConsultantId(consultantResponse.getConsultantId());
         RTRAddedResponse response=rtrService.createRTR(userId, directRTRRequest);
         ApiResponse<RTRAddedResponse> apiResponse=new ApiResponse<>(true,"Direct RTR is create along with the consultant : "+consultantResponse.getConsultantId(),response,null);

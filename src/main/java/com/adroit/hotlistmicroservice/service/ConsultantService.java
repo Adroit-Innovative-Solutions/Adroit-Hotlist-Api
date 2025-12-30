@@ -56,13 +56,13 @@ public class ConsultantService {
     }
     @Transactional
     public ConsultantAddedResponse addConsultant(ConsultantDto dto, List<MultipartFile> resumes,
-                                                 List<MultipartFile> documents, boolean isAssignAll) throws IOException {
+                                                 List<MultipartFile> documents, boolean isAssignAll, boolean isDirectRtr) throws IOException {
         logger.info("Creating new consultant {}", dto.getName());
 
         setUserNamesFromService(dto);
         validateExistingConsultants(dto);
 
-        Consultant consultantToSave = prepareConsultantForSave(dto, isAssignAll);
+        Consultant consultantToSave = prepareConsultantForSave(dto, isAssignAll,isDirectRtr);
         consultantToSave = saveConsultantWithDocuments(consultantToSave, resumes, documents);
 
         logger.info("Consultant {} Successfully with ID: {}",
@@ -137,7 +137,7 @@ public class ConsultantService {
                 .collect(Collectors.toList());
     }
 
-    private Consultant prepareConsultantForSave(ConsultantDto dto, boolean isAssignAll) {
+    private Consultant prepareConsultantForSave(ConsultantDto dto, boolean isAssignAll, boolean isDirectRtr) {
         List<Consultant> existingConsultants = consultantRepo.findByEmailIdAndPersonalContact(
                 dto.getEmailId(), dto.getPersonalContact());
 
@@ -146,7 +146,7 @@ public class ConsultantService {
         if (!softDeletedConsultants.isEmpty()) {
             return restoreSoftDeletedConsultant(softDeletedConsultants.get(0), dto, isAssignAll);
         } else {
-            return createNewConsultant(dto, isAssignAll);
+            return createNewConsultant(dto, isAssignAll,isDirectRtr);
         }
     }
 
@@ -174,17 +174,24 @@ public class ConsultantService {
         return deletedConsultant;
     }
 
-    private Consultant createNewConsultant(ConsultantDto dto, boolean isAssignAll) {
+    private Consultant createNewConsultant(ConsultantDto dto, boolean isAssignAll,boolean isDirectRtr) {
         logger.info("Creating new consultant");
-
         Consultant consultant = consultantMapper.toEntity(dto);
-        consultant.setIsAssignAll(isAssignAll);
-        consultant.setMovedToHotlist(false);
-        consultant.setConsultantId(generateConsultantId());
-        consultant.setConsultantAddedTimeStamp(LocalDateTime.now());
-        consultant.setUpdatedTimeStamp(LocalDateTime.now());
-        consultant.setApprovalStatus("NOT_RAISED");
-
+        if (!isDirectRtr) {
+            consultant.setIsAssignAll(isAssignAll);
+            consultant.setMovedToHotlist(false);
+            consultant.setConsultantId(generateConsultantId());
+            consultant.setConsultantAddedTimeStamp(LocalDateTime.now());
+            consultant.setUpdatedTimeStamp(LocalDateTime.now());
+            consultant.setApprovalStatus("NOT_RAISED");
+        } else if (isDirectRtr) {
+            consultant.setIsAssignAll(isAssignAll);
+            consultant.setMovedToHotlist(true);
+            consultant.setConsultantId(generateConsultantId());
+            consultant.setConsultantAddedTimeStamp(LocalDateTime.now());
+            consultant.setUpdatedTimeStamp(LocalDateTime.now());
+            consultant.setApprovalStatus("APPROVED");
+        }
         return consultant;
     }
 
