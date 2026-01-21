@@ -141,11 +141,10 @@ public class RTRInterviewSpecification {
         return Specification
                 .where(isNotDeleted())
                 .and((root, query, criteriaBuilder) -> {
-                    if (consultantIds != null && !consultantIds.isEmpty()) {
-                        return root.get("consultantId").in(consultantIds);
-                    } else {
-                        return criteriaBuilder.conjunction();
+                    if (consultantIds == null || consultantIds.isEmpty()) {
+                        return criteriaBuilder.disjunction();
                     }
+                    return root.get("consultantId").in(consultantIds);
                 })
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword));
