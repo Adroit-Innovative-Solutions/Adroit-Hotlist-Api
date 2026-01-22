@@ -146,38 +146,25 @@ public class RTRInterviewService {
 
         Page<RTRInterviewDto> map = rtrInterviewRepository.allInterviews(keyword, filters, fromDate, toDate,pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
-
-        map.forEach(dto -> {
-            try {
-                if (dto.getCreatedBy() != null) {
-                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
-                    ApiResponse<UserDto> apiResponse = response.getBody();
-
-                    if (apiResponse != null && apiResponse.getData() != null) {
-                        dto.setCreatedBy(apiResponse.getData().getUserName());
-                    } else {
-                        dto.setCreatedBy("Unknown");
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
-                dto.setCreatedBy("Unknown");
-            }
-        });
+        getRTRInterviewDtoWithUserName(map);
         return map;
     }
 
     public Page<RTRInterviewDto> getSalesInterviews(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
 
-        return rtrInterviewRepository.salesInterviews(userId, keyword, filters, pageable)
+        Page<RTRInterviewDto> map = rtrInterviewRepository.salesInterviews(userId, keyword, filters, pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
+        getRTRInterviewDtoWithUserName(map);
+        return map;
     }
 
     public Page<RTRInterviewDto> getTeamInterviews(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
 
        List<String> teamConsultants= consultantRepo.findConsultantIdsByTeamLeadId(userId);
-      return rtrInterviewRepository.teamInterviews(teamConsultants,keyword,filters,pageable)
-               .map(rtrInterviewMapper::rtrEntityToRTRDto);
+        Page<RTRInterviewDto> map = rtrInterviewRepository.teamInterviews(teamConsultants, keyword, filters, pageable)
+                .map(rtrInterviewMapper::rtrEntityToRTRDto);
+        getRTRInterviewDtoWithUserName(map);
+        return map;
     }
 
     public RTRInterviewDto getInterviewsByRtrId(String rtrId){
@@ -193,4 +180,25 @@ public class RTRInterviewService {
             int num=Integer.parseInt(lastRtrId.replace("INTER",""))+1;
             return String.format("INTER%06d",num);
     }
+
+    public void getRTRInterviewDtoWithUserName(Page<RTRInterviewDto> map) {
+        for (RTRInterviewDto dto : map) {
+            try {
+                if (dto.getCreatedBy() != null) {
+                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
+                    ApiResponse<UserDto> apiResponse = response.getBody();
+
+                    if (apiResponse != null && apiResponse.getData() != null) {
+                        dto.setCreatedBy(apiResponse.getData().getUserName());
+                    } else {
+                        dto.setCreatedBy("Unknown");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
+                dto.setCreatedBy("Unknown");
+            }
+        }
+    }
+
 }
