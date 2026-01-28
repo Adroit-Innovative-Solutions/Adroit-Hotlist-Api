@@ -130,7 +130,7 @@ public class RTRInterviewSpecification {
     public static Specification<RTRInterview> salesInterviews(String keyword,Map<String,Object> filters,String userId){
         return Specification.where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.or(
+                        criteriaBuilder.and(
                                 criteriaBuilder.equal(root.get("salesExecutiveId"),userId),
                                 criteriaBuilder.equal(root.get("createdBy"), userId)
                         ))
