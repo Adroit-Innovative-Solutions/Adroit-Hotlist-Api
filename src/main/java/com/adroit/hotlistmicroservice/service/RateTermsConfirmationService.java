@@ -98,8 +98,10 @@ public class RateTermsConfirmationService {
     }
 
     public Page<RateTermsConfirmationDTO> getSalesRTRList(String userId,String keyword,Map<String ,Object> filters,Pageable pageable){
+        List<String> salesConsultants = consultantRepo.findConsultantIdsBySalesExecutiveId(userId);
+        log.info("Sales executive {} has {} consultants: {}", userId, salesConsultants.size(), salesConsultants);
 
-        return rtrRepository.salesRTRs(userId, keyword, filters, pageable)
+        return rtrRepository.salesRTRs(salesConsultants, keyword, filters, pageable)
                 .map(rtrMapper::toDtoFromEntity);
     }
 
@@ -133,7 +135,8 @@ public class RateTermsConfirmationService {
     }
 
     public Page<RateTermsConfirmationDTO> getSalesRTRListByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {
-        return rtrRepository.salesRTRsByDate(userId, keyword, filters, pageable, date)
+        List<String> salesConsultants = consultantRepo.findConsultantIdsBySalesExecutiveId(userId);
+        return rtrRepository.salesRTRsByDate(salesConsultants, keyword, filters, pageable, date)
                 .map(rtrMapper::toDtoFromEntity);
     }
 

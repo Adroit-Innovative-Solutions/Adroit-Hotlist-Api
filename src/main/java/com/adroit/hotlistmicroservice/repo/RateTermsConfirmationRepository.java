@@ -21,8 +21,8 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
       return findAll(RTRSpecifications.allRTRs(keyword, fromDate, toDate, filters),pageable);
    }
 
-   default Page<RateTermsConfirmation> salesRTRs(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
-       return findAll(RTRSpecifications.salesRTRs(userId, keyword, filters),pageable);
+   default Page<RateTermsConfirmation> salesRTRs(List<String> consultantIds, String keyword,Map<String,Object> filters,Pageable pageable){
+       return findAll(RTRSpecifications.salesRTRs(consultantIds, keyword, filters),pageable);
    }
 
     default Page<RateTermsConfirmation> teamRtrs(List<String> consultantIds, String keyword, Map<String,Object> filters, Pageable pageable){
@@ -36,8 +36,8 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
        return findAll(RTRSpecifications.rtrsByDate(keyword,filters,date),pageable);
    }
 
-   default Page<RateTermsConfirmation> salesRTRsByDate(String userId, String keyword, Map<String,Object> filters, Pageable pageable, String date){
-       return findAll(RTRSpecifications.salesRTRsByDate(userId, keyword, filters, date),pageable);
+   default Page<RateTermsConfirmation> salesRTRsByDate(List<String> consultantIds, String keyword, Map<String,Object> filters, Pageable pageable, String date){
+       return findAll(RTRSpecifications.salesRTRsByDate(consultantIds, keyword, filters, date),pageable);
    }
 
    default Page<RateTermsConfirmation> teamRtrsByDate(List<String> consultantIds, String keyword, Map<String,Object> filters, Pageable pageable, String date){

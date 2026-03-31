@@ -64,6 +64,9 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
     @Query("SELECT c.consultantId FROM Consultant c WHERE c.teamLeadId= :teamLeadId AND isDeleted= false")
     List<String> findConsultantIdsByTeamLeadId(@Param("teamLeadId") String teamLeadId);
 
+    @Query("SELECT c.consultantId FROM Consultant c WHERE c.salesExecutiveId= :salesExecutiveId AND isDeleted= false")
+    List<String> findConsultantIdsBySalesExecutiveId(@Param("salesExecutiveId") String salesExecutiveId);
+
 
     default  Page<Consultant> allFullTimeConsultants(String keyword, Map<String, Object> filters, String statusFilter, Pageable pageable){
         return findAll(ConsultantSpecifications.allFullTimeConsultantsSearch(keyword,filters,statusFilter),pageable);

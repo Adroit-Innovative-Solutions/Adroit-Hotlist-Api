@@ -29,7 +29,7 @@ public class RTRSpecifications {
 
         return ((root, query, criteriaBuilder) -> {
           if(keyword==null || keyword.trim().isEmpty()){
-              return criteriaBuilder.conjunction();
+              return criteriaBuilder.disjunction();
           }
 
           String pattern="%"+ keyword+ "%";
@@ -117,14 +117,16 @@ public class RTRSpecifications {
         };
     }
 
-    public static Specification<RateTermsConfirmation> salesRTRs(String userId,String keyword,Map<String,Object> filters){
+    public static Specification<RateTermsConfirmation> salesRTRs(List<String> consultantIds, String keyword, Map<String,Object> filters){
 
         return Specification.where(isNotDeleted())
-                .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.or(
-                               // criteriaBuilder.equal(root.get("salesExecutiveId"),userId),
-                                criteriaBuilder.equal(root.get("createdBy"), userId)
-                        ))
+                .and((root, query, criteriaBuilder) -> {
+                    if (consultantIds != null && !consultantIds.isEmpty()) {
+                        return root.get("consultantId").in(consultantIds);
+                    } else {
+                        return criteriaBuilder.disjunction(); // Return empty result when no consultants
+                    }
+                })
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters));
     }
@@ -152,7 +154,7 @@ public class RTRSpecifications {
                     if (consultantIds != null && !consultantIds.isEmpty()) {
                         return root.get("consultantId").in(consultantIds);
                     } else {
-                        return criteriaBuilder.conjunction();
+                        return criteriaBuilder.disjunction(); // Return empty result when no consultants
                     }
                 })
                 .and(createFiltersSpecification(filters))
@@ -166,10 +168,15 @@ public class RTRSpecifications {
                 .and(createSearchSpecification(keyword));
     }
 
-    public static Specification<RateTermsConfirmation> salesRTRsByDate(String userId, String keyword, Map<String, Object> filters, String date) {
+    public static Specification<RateTermsConfirmation> salesRTRsByDate(List<String> consultantIds, String keyword, Map<String, Object> filters, String date) {
         return Specification.where(isNotDeleted())
-                .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.equal(root.get("createdBy"), userId))
+                .and((root, query, criteriaBuilder) -> {
+                    if (consultantIds != null && !consultantIds.isEmpty()) {
+                        return root.get("consultantId").in(consultantIds);
+                    } else {
+                        return criteriaBuilder.disjunction(); // Return empty result when no consultants
+                    }
+                })
                 .and(isCreatedOnDate(date))
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword));
@@ -181,7 +188,7 @@ public class RTRSpecifications {
                     if (consultantIds != null && !consultantIds.isEmpty()) {
                         return root.get("consultantId").in(consultantIds);
                     } else {
-                        return criteriaBuilder.conjunction();
+                        return criteriaBuilder.disjunction(); // Return empty result when no consultants
                     }
                 })
                 .and(isCreatedOnDate(date))
