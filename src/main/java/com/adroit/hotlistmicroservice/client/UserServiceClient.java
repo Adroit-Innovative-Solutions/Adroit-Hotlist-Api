@@ -16,7 +16,7 @@ import java.util.List;
 public interface UserServiceClient {
 
     @GetMapping("/users/allUsers")
-     ApiResponse<List<UserDto>> getAllUsers();
+     ApiResponse<List<UserDto>> getAllUsers(@RequestParam(required = false) String status, @RequestParam(required = false) String category);
 
     @GetMapping("users/user/{userId}")
      ResponseEntity<ApiResponse<UserDto>> getUserByUserID(@PathVariable String userId);
