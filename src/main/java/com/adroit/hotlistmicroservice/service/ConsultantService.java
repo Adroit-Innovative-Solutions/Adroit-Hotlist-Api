@@ -437,7 +437,7 @@ public class ConsultantService {
     public List<EmployeeDropDownDto> getEmployeeDetailsByRole(String role){
 
         logger.info("Fetching Employee Details For role {}",role);
-        List<UserDto> employees=userServiceClient.getAllUsers().getData();
+        List<UserDto> employees=userServiceClient.getAllUsers(null, null).getData();
         logger.info("Filtering Employees by US Entity...");
         List<UserDto> employeesByRole=employees.stream()
                 .filter(employee -> "US".equalsIgnoreCase(employee.getEntity()))
@@ -494,12 +494,37 @@ public class ConsultantService {
         logger.info("Found {} consultants for TeamLead {}",hotListDtoPage.getTotalElements(),userId);
        return hotListDtoPage;
     }
-    public Page<UserDto> getAllUSEntityUsers(Pageable pageable, String search){
+    public Page<UserDto> getAllUSEntityUsers(Pageable pageable, String search, String category){
         logger.info("Fetching the All US Users...");
-        List<UserDto> users=userServiceClient.getAllUsers().getData().stream()
+        List<UserDto> users=userServiceClient.getAllUsers(null, null).getData().stream()
                 .filter(user -> user.getEntity().equalsIgnoreCase("US"))
                 .filter(user -> {
-                    // If search is null or empty, return all users
+                    // Filter by category if provided
+                    if (category != null && !category.trim().isEmpty()) {
+                        if (category.equalsIgnoreCase("internal")) {
+                            // Internal: email ends with @adroitinnovative.com
+                            if (user.getEmail() == null || !user.getEmail().toLowerCase().endsWith("@adroitinnovative.com")) {
+                                return false;
+                            }
+                        } else if (category.equalsIgnoreCase("external")) {
+                            // External: email does NOT end with @adroitinnovative.com
+                            if (user.getEmail() != null && user.getEmail().toLowerCase().endsWith("@adroitinnovative.com")) {
+                                return false;
+                            }
+                        } else if (category.equalsIgnoreCase("active")) {
+                            // Active status
+                            if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+                                return false;
+                            }
+                        } else if (category.equalsIgnoreCase("inactive")) {
+                            // Inactive status
+                            if (!"INACTIVE".equalsIgnoreCase(user.getStatus())) {
+                                return false;
+                            }
+                        }
+                    }
+
+                    // If search is null or empty, return all users (after category filtering)
                     if (search == null || search.trim().isEmpty()) {
                         return true;
                     }
@@ -683,7 +708,7 @@ public class ConsultantService {
     }
     public Map<String,String> getUserEmailIdsByRole(String role){
         if(!role.equalsIgnoreCase("SUPERADMIN")) {
-            return userServiceClient.getAllUsers().getData()
+            return userServiceClient.getAllUsers(null, null).getData()
                     .stream()
                     .filter(userDto -> "US".equalsIgnoreCase(userDto.getEntity()))
                     .filter(userDto -> userDto.getRoles().stream().anyMatch(roles -> roles.equalsIgnoreCase(role)))
@@ -693,7 +718,7 @@ public class ConsultantService {
                     ));
         }else{
             logger.info("Fetching Primary Super Admin data...");
-            return userServiceClient.getAllUsers().getData()
+            return userServiceClient.getAllUsers(null, null).getData()
                     .stream()
                     .filter(userDto -> userDto.getIsPrimarySuperAdmin())
                     .collect(Collectors.toMap(

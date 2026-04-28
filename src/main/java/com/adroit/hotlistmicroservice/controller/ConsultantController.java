@@ -201,11 +201,12 @@ public class ConsultantController {
     public ResponseEntity<ApiResponse<PageResponse<UserDto>>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category
 
     ){
          Pageable pageable=PageRequest.of(page,size);
-         Page<UserDto> response=consultantService.getAllUSEntityUsers(pageable, search);
+         Page<UserDto> response=consultantService.getAllUSEntityUsers(pageable, search, category);
          PageResponse<UserDto> pageResponse=new PageResponse<>(response);
          ApiResponse<PageResponse<UserDto>> apiResponse=new ApiResponse<>(true,"Users Data Fetched",pageResponse,null);
 
