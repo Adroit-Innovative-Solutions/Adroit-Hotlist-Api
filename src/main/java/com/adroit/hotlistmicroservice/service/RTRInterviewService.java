@@ -76,11 +76,11 @@ public class RTRInterviewService {
         rtrInterviewMapper.updateInterviewFromDto(updateInterviewDto, rtrInterview);
         rtrInterview.setUpdatedBy(userId);
         rtrInterview.setUpdatedAt(LocalDateTime.now());
-        if("PLACED".equalsIgnoreCase(updateInterviewDto.getInterviewStatus())){
-            rtrInterview.setIsPlaced(true);
-        }else {
-            rtrInterview.setIsPlaced(false);
-        }
+        // if("PLACED".equalsIgnoreCase(updateInterviewDto.getInterviewStatus())){
+        //     rtrInterview.setIsPlaced(true);
+        // }else {
+        //     rtrInterview.setIsPlaced(false);
+        // }
         addInterviewHistory(rtrInterview, updateInterviewDto.getInterviewLevel(), updateInterviewDto.getInterviewStatus());
 
         RTRInterview savedInterview=rtrInterviewRepository.save(rtrInterview);
