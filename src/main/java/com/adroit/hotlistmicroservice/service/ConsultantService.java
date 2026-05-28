@@ -496,8 +496,14 @@ public class ConsultantService {
     }
     public Page<UserDto> getAllUSEntityUsers(Pageable pageable, String search, String category){
         logger.info("Fetching the All US Users...");
-        List<UserDto> users=userServiceClient.getAllUsers(null, null).getData().stream()
-                .filter(user -> user.getEntity().equalsIgnoreCase("US"))
+        ApiResponse<List<UserDto>> usersResponse = userServiceClient.getAllUsers(null, null);
+        List<UserDto> allUsers = usersResponse != null && usersResponse.getData() != null
+                ? usersResponse.getData()
+                : Collections.emptyList();
+
+        List<UserDto> users=allUsers.stream()
+                .filter(Objects::nonNull)
+                .filter(user -> "US".equalsIgnoreCase(user.getEntity()))
                 .filter(user -> {
                     // Filter by category if provided
                     if (category != null && !category.trim().isEmpty()) {
