@@ -34,5 +34,26 @@ public interface RTRInterviewRepository extends JpaRepository<RTRInterview,Strin
         return findAll(RTRInterviewSpecification.teamInterviews(consultantIds,keyword,filters),pageable);
     }
 
+    default Page<RTRInterview> coordinatorInterviews(
+            List<String> consultantIds,
+            java.util.Set<String> teamMemberIds,
+            String keyword,
+            Map<String, Object> filters,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable) {
+        return findAll(
+                RTRInterviewSpecification.coordinatorInterviews(
+                        consultantIds,
+                        teamMemberIds,
+                        keyword,
+                        filters,
+                        fromDate,
+                        toDate
+                ),
+                pageable
+        );
+    }
+
     RTRInterview findByRtrIdAndIsDeleted(String rtrId,Boolean isDeleted);
 }
