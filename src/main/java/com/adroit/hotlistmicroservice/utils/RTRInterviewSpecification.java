@@ -150,6 +150,37 @@ public class RTRInterviewSpecification {
                 .and(createSearchSpecification(keyword));
     }
 
+    public static Specification<RTRInterview> coordinatorInterviews(
+            List<String> consultantIds,
+            Set<String> teamMemberIds,
+            String keyword,
+            Map<String, Object> filters,
+            LocalDate fromDate,
+            LocalDate toDate) {
+        return Specification
+                .where(isNotDeleted())
+                .and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+
+                    if (consultantIds != null && !consultantIds.isEmpty()) {
+                        predicates.add(root.get("consultantId").in(consultantIds));
+                    }
+
+                    if (teamMemberIds != null && !teamMemberIds.isEmpty()) {
+                        predicates.add(root.get("salesExecutiveId").in(teamMemberIds));
+                    }
+
+                    if (predicates.isEmpty()) {
+                        return criteriaBuilder.disjunction();
+                    }
+
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+                })
+                .and(createFiltersSpecification(filters))
+                .and(createSearchSpecification(keyword))
+                .and(createdAtDateFilter(fromDate, toDate));
+    }
+
     private static Specification<RTRInterview> isNotDeleted(){
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.isFalse(root.get("isDeleted"));

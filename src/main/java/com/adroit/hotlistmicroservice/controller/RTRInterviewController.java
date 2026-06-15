@@ -67,6 +67,8 @@ public class RTRInterviewController {
           @RequestParam(defaultValue = "10") int size,
           @RequestParam (required = false) String keyword,
           @RequestParam (required = false) Map<String,Object> filters,
+          @RequestParam(defaultValue = "false") boolean coordinator,
+          @RequestParam(required = false) String userId,
           @RequestParam(required = false)
           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate fromDate,
@@ -80,7 +82,20 @@ public class RTRInterviewController {
               size,
               Sort.Direction.DESC,"interviewDateTime");
 
-       Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getAllInterviews(keyword,filters,fromDate,toDate,pageable);
+       if (filters == null) {
+           filters = new java.util.HashMap<>();
+       }
+       filters.remove("page");
+       filters.remove("size");
+       filters.remove("keyword");
+       filters.remove("coordinator");
+       filters.remove("userId");
+       filters.remove("fromDate");
+       filters.remove("toDate");
+
+       Page<RTRInterviewDto> rtrInterviewDtoPage = coordinator
+               ? rtrInterviewService.getCoordinatorInterviews(userId, keyword, filters, fromDate, toDate, pageable)
+               : rtrInterviewService.getAllInterviews(keyword, filters, fromDate, toDate, pageable);
        PageResponse pageResponse=new PageResponse(rtrInterviewDtoPage);
        ApiResponse apiResponse=new ApiResponse(true,"Interviews Fetched Successfully",pageResponse,null);
 

@@ -13,10 +13,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,6 +39,12 @@ public class RTRInterviewService {
 
     @Autowired
     private UserServiceClient userServiceClient;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${user.microservice.url}")
+    private String userMicroserviceUrl;
 
 
     public InterviewAddedDto scheduleInterview(ScheduleInterviewDto interviewDto,String userId) {
@@ -165,6 +173,96 @@ public class RTRInterviewService {
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
         getRTRInterviewDtoWithUserName(map);
         return map;
+    }
+
+    public Page<RTRInterviewDto> getCoordinatorInterviews(
+            String userId,
+            String keyword,
+            Map<String, Object> filters,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable) {
+
+        if (userId == null || userId.isBlank()) {
+            throw new ResourceNotFoundException("User ID is required for coordinator interviews");
+        }
+
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : filters;
+        Set<String> teamMemberIds = getCoordinatorTeamMemberIds(userId);
+        if (teamMemberIds.isEmpty()) {
+            throw new ResourceNotFoundException("No interviews found for coordinator");
+        }
+
+        List<String> consultantIds = consultantRepo.findConsultantIdsByTeamMemberIds(new ArrayList<>(teamMemberIds));
+
+        Page<RTRInterviewDto> map = rtrInterviewRepository.coordinatorInterviews(
+                        consultantIds,
+                        teamMemberIds,
+                        keyword,
+                        safeFilters,
+                        fromDate,
+                        toDate,
+                        pageable)
+                .map(rtrInterviewMapper::rtrEntityToRTRDto);
+
+        getRTRInterviewDtoWithUserName(map);
+        return map;
+    }
+
+    private Set<String> getCoordinatorTeamMemberIds(String coordinatorUserId) {
+        String teamsUrl = userMicroserviceUrl + "/users/AllAssociatedUsers";
+        ResponseEntity<TeamDTO[]> teamsResponse = restTemplate.getForEntity(teamsUrl, TeamDTO[].class);
+        TeamDTO[] teams = teamsResponse.getBody();
+
+        if (teams == null || teams.length == 0) {
+            return Collections.emptySet();
+        }
+
+        Set<String> teamMemberIds = new HashSet<>();
+
+        Arrays.stream(teams)
+                .filter(team -> isCoordinatorAssignedToTeam(team, coordinatorUserId))
+                .forEach(team -> {
+                    if (team.getTeamLeadId() != null && !team.getTeamLeadId().isBlank()) {
+                        teamMemberIds.add(team.getTeamLeadId());
+                    }
+                    teamMemberIds.addAll(extractUserIds(team.getRecruiters()));
+                    teamMemberIds.addAll(extractUserIds(team.getEmployees()));
+                    teamMemberIds.addAll(extractUserIds(team.getSalesExecutives()));
+                });
+
+        return teamMemberIds;
+    }
+
+    private boolean isCoordinatorAssignedToTeam(TeamDTO team, String coordinatorUserId) {
+        if (team.getCoordinators() == null) {
+            return false;
+        }
+
+        return team.getCoordinators().stream()
+                .anyMatch(coordinator -> coordinatorUserId.equals(getAssociatedUserId(coordinator)));
+    }
+
+    private Set<String> extractUserIds(List<AssociatedUser> users) {
+        if (users == null) {
+            return Collections.emptySet();
+        }
+
+        Set<String> userIds = new HashSet<>();
+        users.forEach(user -> {
+            String userId = getAssociatedUserId(user);
+            if (userId != null && !userId.isBlank()) {
+                userIds.add(userId);
+            }
+        });
+        return userIds;
+    }
+
+    private String getAssociatedUserId(AssociatedUser user) {
+        if (user == null) {
+            return null;
+        }
+        return user.getUserId() != null ? user.getUserId() : user.getEmployeeId();
     }
 
     public RTRInterviewDto getInterviewsByRtrId(String rtrId){
