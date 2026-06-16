@@ -9,15 +9,22 @@ import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.repo.RateTermsConfirmationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -33,6 +40,11 @@ public class RateTermsConfirmationService {
     ConsultantRepo consultantRepo;
     @Autowired
     UserServiceClient userServiceClient;
+    @Autowired
+    RestTemplate restTemplate;
+
+    @Value("${user.microservice.url}")
+    private String userMicroserviceUrl;
 
     public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto){
 
@@ -71,30 +83,78 @@ public class RateTermsConfirmationService {
 
         Page<RateTermsConfirmationDTO> map = rtrRepository.allRTRs(keyword, fromDate, toDate, filters, pageable)
                 .map(rtrMapper::toDtoFromEntity);
-        map.forEach(dto -> {
-            try {
-                if (dto.getCreatedBy() != null) {
-                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
-                    ApiResponse<UserDto> apiResponse = response.getBody();
-
-                    if (apiResponse != null && apiResponse.getData() != null) {
-                        dto.setCreatedByName(apiResponse.getData().getUserName());
-                    } else {
-                        dto.setCreatedByName("Unknown");
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
-                dto.setCreatedByName("Unknown");
-            }
-        });
+        populateCreatedByName(map);
         return map;
+    }
+
+    public Page<RateTermsConfirmationDTO> getCoordinatorRTRList(
+            String userId,
+            String keyword,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Map<String, Object> filters,
+            Pageable pageable) {
+
+        if (userId == null || userId.isBlank()) {
+            throw new ResourceNotFoundException("User ID is required for coordinator RTR list");
+        }
+
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : filters;
+        Set<String> teamMemberIds = getCoordinatorTeamMemberIds(userId);
+        if (teamMemberIds.isEmpty()) {
+            throw new ResourceNotFoundException("No RTRs found for coordinator");
+        }
+
+        List<String> consultantIds = consultantRepo.findConsultantIdsByTeamMemberIds(new ArrayList<>(teamMemberIds));
+        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.coordinatorRtrs(
+                        consultantIds,
+                        teamMemberIds,
+                        keyword,
+                        fromDate,
+                        toDate,
+                        safeFilters,
+                        pageable)
+                .map(rtrMapper::toDtoFromEntity);
+
+        populateCreatedByName(dtoPage);
+        return dtoPage;
     }
 
     public Page<RateTermsConfirmationDTO> getRTRListByDate(String keyword, Map<String,Object> filters, Pageable pageable, String date){
 
      return rtrRepository.rtrsByDate(keyword,filters,pageable,date)
               .map(rtrMapper::toDtoFromEntity);
+    }
+
+    public Page<RateTermsConfirmationDTO> getCoordinatorRTRListByDate(
+            String userId,
+            String keyword,
+            Map<String, Object> filters,
+            Pageable pageable,
+            String date) {
+
+        if (userId == null || userId.isBlank()) {
+            throw new ResourceNotFoundException("User ID is required for coordinator RTR list");
+        }
+
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : filters;
+        Set<String> teamMemberIds = getCoordinatorTeamMemberIds(userId);
+        if (teamMemberIds.isEmpty()) {
+            throw new ResourceNotFoundException("No RTRs found for coordinator");
+        }
+
+        List<String> consultantIds = consultantRepo.findConsultantIdsByTeamMemberIds(new ArrayList<>(teamMemberIds));
+        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.coordinatorRtrsByDate(
+                        consultantIds,
+                        teamMemberIds,
+                        keyword,
+                        safeFilters,
+                        pageable,
+                        date)
+                .map(rtrMapper::toDtoFromEntity);
+
+        populateCreatedByName(dtoPage);
+        return dtoPage;
     }
 
     public Page<RateTermsConfirmationDTO> getSalesRTRList(String userId,String keyword,Map<String ,Object> filters,Pageable pageable){
@@ -130,6 +190,82 @@ public class RateTermsConfirmationService {
         });
 
         return dtoPage;
+    }
+
+    private Set<String> getCoordinatorTeamMemberIds(String coordinatorUserId) {
+        String teamsUrl = userMicroserviceUrl + "/users/AllAssociatedUsers";
+        ResponseEntity<TeamDTO[]> teamsResponse = restTemplate.getForEntity(teamsUrl, TeamDTO[].class);
+        TeamDTO[] teams = teamsResponse.getBody();
+
+        if (teams == null || teams.length == 0) {
+            return Collections.emptySet();
+        }
+
+        Set<String> teamMemberIds = new HashSet<>();
+
+        Arrays.stream(teams)
+                .filter(team -> isCoordinatorAssignedToTeam(team, coordinatorUserId))
+                .forEach(team -> {
+                    if (team.getTeamLeadId() != null && !team.getTeamLeadId().isBlank()) {
+                        teamMemberIds.add(team.getTeamLeadId());
+                    }
+                    teamMemberIds.addAll(extractUserIds(team.getRecruiters()));
+                    teamMemberIds.addAll(extractUserIds(team.getEmployees()));
+                    teamMemberIds.addAll(extractUserIds(team.getSalesExecutives()));
+                });
+
+        return teamMemberIds;
+    }
+
+    private boolean isCoordinatorAssignedToTeam(TeamDTO team, String coordinatorUserId) {
+        if (team.getCoordinators() == null) {
+            return false;
+        }
+
+        return team.getCoordinators().stream()
+                .anyMatch(coordinator -> coordinatorUserId.equals(getAssociatedUserId(coordinator)));
+    }
+
+    private Set<String> extractUserIds(List<AssociatedUser> users) {
+        if (users == null) {
+            return Collections.emptySet();
+        }
+
+        Set<String> userIds = new HashSet<>();
+        users.forEach(user -> {
+            String userId = getAssociatedUserId(user);
+            if (userId != null && !userId.isBlank()) {
+                userIds.add(userId);
+            }
+        });
+        return userIds;
+    }
+
+    private String getAssociatedUserId(AssociatedUser user) {
+        if (user == null) {
+            return null;
+        }
+        return user.getUserId() != null ? user.getUserId() : user.getEmployeeId();
+    }
+
+    private void populateCreatedByName(Page<RateTermsConfirmationDTO> dtoPage) {
+        dtoPage.forEach(dto -> {
+            try {
+                if (dto.getCreatedBy() != null) {
+                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
+                    ApiResponse<UserDto> apiResponse = response.getBody();
+
+                    if (apiResponse != null && apiResponse.getData() != null) {
+                        dto.setCreatedByName(apiResponse.getData().getUserName());
+                    } else {
+                        dto.setCreatedByName("Unknown");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
+                dto.setCreatedByName("Unknown");
+            }
+        });
     }
 
     public Page<RateTermsConfirmationDTO> getSalesRTRListByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {

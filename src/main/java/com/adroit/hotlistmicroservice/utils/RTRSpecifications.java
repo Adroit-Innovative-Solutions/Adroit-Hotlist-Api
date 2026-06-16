@@ -159,6 +159,69 @@ public class RTRSpecifications {
                 .and(createSearchSpecification(keyword));
     }
 
+    public static Specification<RateTermsConfirmation> coordinatorRtrs(
+            List<String> consultantIds,
+            Set<String> teamMemberIds,
+            String keyword,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Map<String, Object> filters) {
+        return Specification
+                .where(isNotDeleted())
+                .and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+
+                    if (consultantIds != null && !consultantIds.isEmpty()) {
+                        predicates.add(root.get("consultantId").in(consultantIds));
+                    }
+
+                    if (teamMemberIds != null && !teamMemberIds.isEmpty()) {
+                        predicates.add(root.get("salesExecutiveId").in(teamMemberIds));
+                        predicates.add(root.get("createdBy").in(teamMemberIds));
+                    }
+
+                    if (predicates.isEmpty()) {
+                        return criteriaBuilder.disjunction();
+                    }
+
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+                })
+                .and(createDateRangeSpecification(fromDate, toDate))
+                .and(createFiltersSpecification(filters))
+                .and(createSearchSpecification(keyword));
+    }
+
+    public static Specification<RateTermsConfirmation> coordinatorRtrsByDate(
+            List<String> consultantIds,
+            Set<String> teamMemberIds,
+            String keyword,
+            Map<String, Object> filters,
+            String date) {
+        return Specification
+                .where(isNotDeleted())
+                .and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+
+                    if (consultantIds != null && !consultantIds.isEmpty()) {
+                        predicates.add(root.get("consultantId").in(consultantIds));
+                    }
+
+                    if (teamMemberIds != null && !teamMemberIds.isEmpty()) {
+                        predicates.add(root.get("salesExecutiveId").in(teamMemberIds));
+                        predicates.add(root.get("createdBy").in(teamMemberIds));
+                    }
+
+                    if (predicates.isEmpty()) {
+                        return criteriaBuilder.disjunction();
+                    }
+
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+                })
+                .and(isCreatedOnDate(date))
+                .and(createFiltersSpecification(filters))
+                .and(createSearchSpecification(keyword));
+    }
+
     public static Specification<RateTermsConfirmation> rtrsByDate(String keyword, Map<String, Object> filters, String date) {
         return Specification.where(isNotDeleted())
                 .and(isCreatedOnDate(date))

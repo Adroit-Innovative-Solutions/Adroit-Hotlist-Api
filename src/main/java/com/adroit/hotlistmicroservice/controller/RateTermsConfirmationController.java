@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 @CrossOrigin(origins = {"http://35.188.150.92", "http://192.168.0.140:3000", "http://192.168.0.139:3000","https://mymulya.com","http://localhost:3000","http://192.168.0.135:8080","http://192.168.0.135",
@@ -59,8 +60,12 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) String keyword,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toDate,
+            @RequestParam(defaultValue = "false") boolean coordinator,
+            @RequestParam(required = false) String userId,
             @RequestParam (required = false) Map<String,Object> filters
     ){
+        filters = sanitizeFilters(filters);
+
         // If only fromDate is provided, set toDate to the same date
         if (fromDate != null && toDate == null) {
             toDate = fromDate;
@@ -74,7 +79,9 @@ public class RateTermsConfirmationController {
         LocalDateTime toDateTime = toDate != null ? toDate.atTime(23, 59, 59) : null;
 
         Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
-        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getRTRList(keyword,fromDateTime,toDateTime,filters,pageable);
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage = coordinator
+                ? rtrService.getCoordinatorRTRList(userId, keyword, fromDateTime, toDateTime, filters, pageable)
+                : rtrService.getRTRList(keyword, fromDateTime, toDateTime, filters, pageable);
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
 
         ApiResponse apiResponse=new ApiResponse(true,"RTR fetched Successfully",pageResponse,null);
@@ -183,10 +190,15 @@ public class RateTermsConfirmationController {
             @RequestParam (defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
             @RequestParam (required = false) Map<String,Object> filters,
+            @RequestParam(defaultValue = "false") boolean coordinator,
+            @RequestParam(required = false) String userId,
             @RequestParam (required = false) String date
     ){
+        filters = sanitizeFilters(filters);
         Pageable pageable= PageRequest.of(page,size, Sort.Direction.DESC,"createdAt");
-        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getRTRListByDate(keyword,filters,pageable,date);
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage = coordinator
+                ? rtrService.getCoordinatorRTRListByDate(userId, keyword, filters, pageable, date)
+                : rtrService.getRTRListByDate(keyword, filters, pageable, date);
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
 
         ApiResponse apiResponse=new ApiResponse(true,"RTR fetched Successfully",pageResponse,null);
@@ -222,5 +234,17 @@ public class RateTermsConfirmationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
+    private Map<String, Object> sanitizeFilters(Map<String, Object> filters) {
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : new HashMap<>(filters);
+        safeFilters.remove("page");
+        safeFilters.remove("size");
+        safeFilters.remove("keyword");
+        safeFilters.remove("coordinator");
+        safeFilters.remove("userId");
+        safeFilters.remove("fromDate");
+        safeFilters.remove("toDate");
+        safeFilters.remove("date");
+        return safeFilters;
+    }
 
 }

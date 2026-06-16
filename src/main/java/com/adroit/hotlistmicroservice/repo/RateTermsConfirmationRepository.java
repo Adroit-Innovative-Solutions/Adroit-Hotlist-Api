@@ -25,9 +25,28 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
        return findAll(RTRSpecifications.salesRTRs(userId, keyword, filters),pageable);
    }
 
-    default Page<RateTermsConfirmation> teamRtrs(List<String> consultantIds, String keyword, Map<String,Object> filters, Pageable pageable){
+   default Page<RateTermsConfirmation> teamRtrs(List<String> consultantIds, String keyword, Map<String,Object> filters, Pageable pageable){
         return findAll(RTRSpecifications.teamRtrs(consultantIds,keyword,filters),pageable);
     }
+
+   default Page<RateTermsConfirmation> coordinatorRtrs(
+           List<String> consultantIds,
+           java.util.Set<String> teamMemberIds,
+           String keyword,
+           LocalDateTime fromDate,
+           LocalDateTime toDate,
+           Map<String, Object> filters,
+           Pageable pageable) {
+       return findAll(RTRSpecifications.coordinatorRtrs(
+               consultantIds,
+               teamMemberIds,
+               keyword,
+               fromDate,
+               toDate,
+               filters
+       ), pageable);
+   }
+
    default Page<RateTermsConfirmation> consultantRTRs(String consultantId,String keyword,Map<String,Object> filters,Pageable pageable){
        return findAll(RTRSpecifications.consultantRTRs(consultantId,keyword,filters),pageable);
    }
@@ -42,6 +61,22 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
 
    default Page<RateTermsConfirmation> teamRtrsByDate(List<String> consultantIds, String keyword, Map<String,Object> filters, Pageable pageable, String date){
        return findAll(RTRSpecifications.teamRtrsByDate(consultantIds, keyword, filters, date),pageable);
+   }
+
+   default Page<RateTermsConfirmation> coordinatorRtrsByDate(
+           List<String> consultantIds,
+           java.util.Set<String> teamMemberIds,
+           String keyword,
+           Map<String, Object> filters,
+           Pageable pageable,
+           String date) {
+       return findAll(RTRSpecifications.coordinatorRtrsByDate(
+               consultantIds,
+               teamMemberIds,
+               keyword,
+               filters,
+               date
+       ), pageable);
    }
 
    Optional<RateTermsConfirmation> findById(String rtrId);
