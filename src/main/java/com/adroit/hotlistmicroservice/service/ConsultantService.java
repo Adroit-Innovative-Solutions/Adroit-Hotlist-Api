@@ -494,40 +494,27 @@ public class ConsultantService {
         logger.info("Found {} consultants for TeamLead {}",hotListDtoPage.getTotalElements(),userId);
        return hotListDtoPage;
     }
-    public Page<UserDto> getAllUSEntityUsers(Pageable pageable, String search, String category){
+    public Page<UserDto> getAllUSEntityUsers(Pageable pageable, String search, List<String> categories){
         logger.info("Fetching the All US Users...");
         ApiResponse<List<UserDto>> usersResponse = userServiceClient.getAllUsers(null, null);
         List<UserDto> allUsers = usersResponse != null && usersResponse.getData() != null
                 ? usersResponse.getData()
                 : Collections.emptyList();
 
+        Set<String> selectedCategories = categories == null
+                ? Collections.emptySet()
+                : categories.stream()
+                .filter(Objects::nonNull)
+                .map(category -> category.trim().toLowerCase())
+                .filter(category -> !category.isEmpty() && !"all".equals(category))
+                .collect(Collectors.toSet());
+
         List<UserDto> users=allUsers.stream()
                 .filter(Objects::nonNull)
                 .filter(user -> "US".equalsIgnoreCase(user.getEntity()))
                 .filter(user -> {
-                    // Filter by category if provided
-                    if (category != null && !category.trim().isEmpty()) {
-                        if (category.equalsIgnoreCase("internal")) {
-                            // Internal: email ends with @adroitinnovative.com
-                            if (user.getEmail() == null || !user.getEmail().toLowerCase().endsWith("@adroitinnovative.com")) {
-                                return false;
-                            }
-                        } else if (category.equalsIgnoreCase("external")) {
-                            // External: email does NOT end with @adroitinnovative.com
-                            if (user.getEmail() != null && user.getEmail().toLowerCase().endsWith("@adroitinnovative.com")) {
-                                return false;
-                            }
-                        } else if (category.equalsIgnoreCase("active")) {
-                            // Active status
-                            if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
-                                return false;
-                            }
-                        } else if (category.equalsIgnoreCase("inactive")) {
-                            // Inactive status
-                            if (!"INACTIVE".equalsIgnoreCase(user.getStatus())) {
-                                return false;
-                            }
-                        }
+                    if (!matchesUserCategories(user, selectedCategories)) {
+                        return false;
                     }
 
                     // If search is null or empty, return all users (after category filtering)
@@ -553,6 +540,31 @@ public class ConsultantService {
         logger.info("Found {} US users ",users.size());
        return new PageImpl<>(pagedList,pageable, users.size());
     }
+
+    private boolean matchesUserCategories(UserDto user, Set<String> categories) {
+        if (categories == null || categories.isEmpty()) {
+            return true;
+        }
+
+        boolean isInternal = user.getEmail() != null
+                && user.getEmail().toLowerCase().endsWith("@adroitinnovative.com");
+
+        if (categories.contains("internal") && !isInternal) {
+            return false;
+        }
+        if (categories.contains("external") && isInternal) {
+            return false;
+        }
+        if (categories.contains("active") && !"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            return false;
+        }
+        if (categories.contains("inactive") && !"INACTIVE".equalsIgnoreCase(user.getStatus())) {
+            return false;
+        }
+
+        return true;
+    }
+
     public Page<ConsultantDto> getSalesExecutiveConsultants(String salesExecutiveId, String keyword, Pageable pageable, Map<String,Object> filters, String statusFilter){
         logger.info("Fetching the Consultants for Sales Executive ID :{}",salesExecutiveId);
        UserDto userDto=userServiceClient.getUserByUserID(salesExecutiveId).getBody().getData();
