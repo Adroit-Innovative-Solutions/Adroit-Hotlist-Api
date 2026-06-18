@@ -35,7 +35,6 @@ public interface RTRInterviewRepository extends JpaRepository<RTRInterview,Strin
     }
 
     default Page<RTRInterview> coordinatorInterviews(
-            List<String> consultantIds,
             java.util.Set<String> teamMemberIds,
             String keyword,
             Map<String, Object> filters,
@@ -44,7 +43,6 @@ public interface RTRInterviewRepository extends JpaRepository<RTRInterview,Strin
             Pageable pageable) {
         return findAll(
                 RTRInterviewSpecification.coordinatorInterviews(
-                        consultantIds,
                         teamMemberIds,
                         keyword,
                         filters,
