@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -114,7 +115,7 @@ public class RateTermsConfirmationService {
                 .map(rtrMapper::toDtoFromEntity);
 
         populateCreatedByName(dtoPage);
-        return dtoPage;
+        return removeUnknownCreatedByNames(dtoPage, pageable);
     }
 
     public Page<RateTermsConfirmationDTO> getRTRListByDate(String keyword, Map<String,Object> filters, Pageable pageable, String date){
@@ -149,7 +150,7 @@ public class RateTermsConfirmationService {
                 .map(rtrMapper::toDtoFromEntity);
 
         populateCreatedByName(dtoPage);
-        return dtoPage;
+        return removeUnknownCreatedByNames(dtoPage, pageable);
     }
 
     public Page<RateTermsConfirmationDTO> getSalesRTRList(String userId,String keyword,Map<String ,Object> filters,Pageable pageable){
@@ -262,6 +263,15 @@ public class RateTermsConfirmationService {
                 dto.setCreatedByName("Unknown");
             }
         });
+    }
+
+    private Page<RateTermsConfirmationDTO> removeUnknownCreatedByNames(
+            Page<RateTermsConfirmationDTO> dtoPage,
+            Pageable pageable) {
+        List<RateTermsConfirmationDTO> knownCreatedByContent = dtoPage.getContent().stream()
+                .filter(dto -> dto.getCreatedByName() != null && !"Unknown".equalsIgnoreCase(dto.getCreatedByName()))
+                .toList();
+        return new PageImpl<>(knownCreatedByContent, pageable, knownCreatedByContent.size());
     }
 
     public Page<RateTermsConfirmationDTO> getSalesRTRListByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {
