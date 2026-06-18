@@ -151,7 +151,6 @@ public class RTRInterviewSpecification {
     }
 
     public static Specification<RTRInterview> coordinatorInterviews(
-            List<String> consultantIds,
             Set<String> teamMemberIds,
             String keyword,
             Map<String, Object> filters,
@@ -160,21 +159,11 @@ public class RTRInterviewSpecification {
         return Specification
                 .where(isNotDeleted())
                 .and((root, query, criteriaBuilder) -> {
-                    List<Predicate> predicates = new ArrayList<>();
-
-                    if (consultantIds != null && !consultantIds.isEmpty()) {
-                        predicates.add(root.get("consultantId").in(consultantIds));
-                    }
-
-                    if (teamMemberIds != null && !teamMemberIds.isEmpty()) {
-                        predicates.add(root.get("salesExecutiveId").in(teamMemberIds));
-                    }
-
-                    if (predicates.isEmpty()) {
+                    if (teamMemberIds == null || teamMemberIds.isEmpty()) {
                         return criteriaBuilder.disjunction();
                     }
 
-                    return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+                    return root.get("createdBy").in(teamMemberIds);
                 })
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword))

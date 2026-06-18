@@ -193,10 +193,7 @@ public class RTRInterviewService {
             throw new ResourceNotFoundException("No interviews found for coordinator");
         }
 
-        List<String> consultantIds = consultantRepo.findConsultantIdsByTeamMemberIds(new ArrayList<>(teamMemberIds));
-
         Page<RTRInterviewDto> map = rtrInterviewRepository.coordinatorInterviews(
-                        consultantIds,
                         teamMemberIds,
                         keyword,
                         safeFilters,
@@ -229,6 +226,7 @@ public class RTRInterviewService {
                     teamMemberIds.addAll(extractUserIds(team.getRecruiters()));
                     teamMemberIds.addAll(extractUserIds(team.getEmployees()));
                     teamMemberIds.addAll(extractUserIds(team.getSalesExecutives()));
+                    teamMemberIds.addAll(extractUserIds(team.getCoordinators()));
                 });
 
         return teamMemberIds;
