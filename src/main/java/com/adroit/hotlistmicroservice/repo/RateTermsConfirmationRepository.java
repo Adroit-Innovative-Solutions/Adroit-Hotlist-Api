@@ -30,7 +30,6 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
     }
 
    default Page<RateTermsConfirmation> coordinatorRtrs(
-           List<String> consultantIds,
            java.util.Set<String> teamMemberIds,
            String keyword,
            LocalDateTime fromDate,
@@ -38,7 +37,6 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
            Map<String, Object> filters,
            Pageable pageable) {
        return findAll(RTRSpecifications.coordinatorRtrs(
-               consultantIds,
                teamMemberIds,
                keyword,
                fromDate,
@@ -64,14 +62,12 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
    }
 
    default Page<RateTermsConfirmation> coordinatorRtrsByDate(
-           List<String> consultantIds,
            java.util.Set<String> teamMemberIds,
            String keyword,
            Map<String, Object> filters,
            Pageable pageable,
            String date) {
        return findAll(RTRSpecifications.coordinatorRtrsByDate(
-               consultantIds,
                teamMemberIds,
                keyword,
                filters,
