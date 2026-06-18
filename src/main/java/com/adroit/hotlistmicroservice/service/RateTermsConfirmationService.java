@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -105,9 +104,7 @@ public class RateTermsConfirmationService {
             throw new ResourceNotFoundException("No RTRs found for coordinator");
         }
 
-        List<String> consultantIds = consultantRepo.findConsultantIdsByTeamMemberIds(new ArrayList<>(teamMemberIds));
         Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.coordinatorRtrs(
-                        consultantIds,
                         teamMemberIds,
                         keyword,
                         fromDate,
@@ -143,9 +140,7 @@ public class RateTermsConfirmationService {
             throw new ResourceNotFoundException("No RTRs found for coordinator");
         }
 
-        List<String> consultantIds = consultantRepo.findConsultantIdsByTeamMemberIds(new ArrayList<>(teamMemberIds));
         Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.coordinatorRtrsByDate(
-                        consultantIds,
                         teamMemberIds,
                         keyword,
                         safeFilters,
@@ -212,6 +207,7 @@ public class RateTermsConfirmationService {
                     teamMemberIds.addAll(extractUserIds(team.getRecruiters()));
                     teamMemberIds.addAll(extractUserIds(team.getEmployees()));
                     teamMemberIds.addAll(extractUserIds(team.getSalesExecutives()));
+                    teamMemberIds.addAll(extractUserIds(team.getCoordinators()));
                 });
 
         return teamMemberIds;
