@@ -45,32 +45,17 @@ public class RateTermsConfirmationService {
     @Value("${user.microservice.url}")
     private String userMicroserviceUrl;
 
-    public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto) {
-        RateTermsConfirmation rtr = rtrMapper.entityFromRequest(rtrDto);
+    public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto){
+
+        RateTermsConfirmation rtr=rtrMapper.entityFromRequest(rtrDto);
         rtr.setRtrId(generateRtrId());
         rtr.setCreatedBy(userId);
-
-        try {
-            ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(userId);
-
-            if (response != null && response.getBody() != null && response.getBody().getData() != null) {
-                UserDto userDto = response.getBody().getData();
-                rtr.setCreatedByName(userDto.getUserName());
-
-            } else {
-                rtr.setCreatedByName(userId);
-            }
-
-        } catch (Exception e) {
-            log.warn("Failed to fetch username for userId: {}", userId, e);
-            rtr.setCreatedByName(userId);
-        }
-        ConsultantDto consultant = consultantService.getConsultantByID(rtrDto.getConsultantId());
+        ConsultantDto consultant=consultantService.getConsultantByID(rtrDto.getConsultantId());
         rtr.setConsultantName(consultant.getName());
         rtr.setSalesExecutiveId(consultant.getSalesExecutiveId());
         rtr.setSalesExecutive(consultant.getSalesExecutive());
         rtr.setTechnology(consultant.getTechnology());
-        RateTermsConfirmation savedRTR = rtrRepository.save(rtr);
+        RateTermsConfirmation savedRTR=rtrRepository.save(rtr);
         return rtrMapper.toRtrAddedResponse(savedRTR);
     }
 
@@ -261,34 +246,24 @@ public class RateTermsConfirmationService {
 
     private void populateCreatedByName(Page<RateTermsConfirmationDTO> dtoPage) {
         dtoPage.forEach(dto -> {
-
-            if (dto.getCreatedByName() != null && !dto.getCreatedByName().trim().isEmpty()) {
-                return;
-            }
-            if (dto.getCreatedBy() == null || dto.getCreatedBy().trim().isEmpty()) {
-                dto.setCreatedByName("N/A");
-                return;
-            }
-
             try {
+                if (dto.getCreatedBy() != null) {
+                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
+                    ApiResponse<UserDto> apiResponse = response.getBody();
 
-                ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
-                ApiResponse<UserDto> apiResponse = response.getBody();
-                if (apiResponse != null && apiResponse.getData() != null &&
-                        apiResponse.getData().getUserName() != null) {
-
-                    dto.setCreatedByName(apiResponse.getData().getUserName());
-
-                } else {
-                    dto.setCreatedByName(dto.getCreatedBy());
+                    if (apiResponse != null && apiResponse.getData() != null) {
+                        dto.setCreatedByName(apiResponse.getData().getUserName());
+                    } else {
+                        dto.setCreatedByName("Unknown");
+                    }
                 }
             } catch (Exception e) {
-
-                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy());
-                dto.setCreatedByName(dto.getCreatedBy());
+                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
+                dto.setCreatedByName("Unknown");
             }
         });
     }
+
     public Page<RateTermsConfirmationDTO> getSalesRTRListByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {
         return rtrRepository.salesRTRsByDate(userId, keyword, filters, pageable, date)
                 .map(rtrMapper::toDtoFromEntity);
