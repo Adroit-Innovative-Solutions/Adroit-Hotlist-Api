@@ -1,9 +1,6 @@
 package com.adroit.hotlistmicroservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Getter
@@ -34,6 +31,9 @@ public class RateTermsConfirmation extends BaseEntity{
     private String vendorLinkedIn;
     private String implementationPartner;
     private String comments;
+
+    @Column(name = "created_by_name")
+    private String createdByName;
 
 
     @PrePersist
