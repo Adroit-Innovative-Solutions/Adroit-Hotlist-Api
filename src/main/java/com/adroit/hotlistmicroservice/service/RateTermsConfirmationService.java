@@ -7,11 +7,14 @@ import com.adroit.hotlistmicroservice.mapper.RateTermsConfirmationMapper;
 import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.repo.RateTermsConfirmationRepository;
+import com.adroit.hotlistmicroservice.repo.UserDetailsRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -41,6 +44,9 @@ public class RateTermsConfirmationService {
     UserServiceClient userServiceClient;
     @Autowired
     RestTemplate restTemplate;
+
+    @Autowired
+    UserDetailsRepository userDetailsRepository;
 
     @Value("${user.microservice.url}")
     private String userMicroserviceUrl;
@@ -246,21 +252,7 @@ public class RateTermsConfirmationService {
 
     private void populateCreatedByName(Page<RateTermsConfirmationDTO> dtoPage) {
         dtoPage.forEach(dto -> {
-            try {
-                if (dto.getCreatedBy() != null) {
-                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
-                    ApiResponse<UserDto> apiResponse = response.getBody();
-
-                    if (apiResponse != null && apiResponse.getData() != null) {
-                        dto.setCreatedByName(apiResponse.getData().getUserName());
-                    } else {
-                        dto.setCreatedByName("Unknown");
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
-                dto.setCreatedByName("Unknown");
-            }
+            dto.setCreatedByName(userDetailsRepository.findUserNameByUserId(dto.getCreatedBy()));
         });
     }
 
@@ -307,5 +299,20 @@ public class RateTermsConfirmationService {
 
         return deleteResponse;
 
+    }
+
+
+    public ApiResponse<UserDto> getUserByUserID(String userId) {
+        String url = "http://localhost:8083/"+userId;
+        ResponseEntity<ApiResponse<UserDto>> response =
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<ApiResponse<UserDto>>() {},
+                        userId
+                );
+
+        return response.getBody();
     }
 }
