@@ -434,6 +434,18 @@ public class ConsultantService {
         dto.setEmployeeName(userDto.getUserName());
         return dto;
     }
+
+    private static boolean isActiveUser(UserDto userDto) {
+        return userDto != null
+                && userDto.getStatus() != null
+                && "Active".equalsIgnoreCase(userDto.getStatus().trim());
+    }
+
+    private static boolean hasRole(UserDto userDto, String role) {
+        return userDto.getRoles() != null
+                && userDto.getRoles().stream().anyMatch(userRole -> userRole.equalsIgnoreCase(role));
+    }
+
     public List<EmployeeDropDownDto> getEmployeeDetailsByRole(String role){
 
         logger.info("Fetching Employee Details For role {}",role);
@@ -441,7 +453,8 @@ public class ConsultantService {
         logger.info("Filtering Employees by US Entity...");
         List<UserDto> employeesByRole=employees.stream()
                 .filter(employee -> "US".equalsIgnoreCase(employee.getEntity()))
-                .filter(employee-> employee.getRoles().contains(role))
+                .filter(ConsultantService::isActiveUser)
+                .filter(employee -> hasRole(employee, role))
                 .collect(Collectors.toList());
 
         List<EmployeeDropDownDto> dropDownEmployees=employeesByRole.stream()
