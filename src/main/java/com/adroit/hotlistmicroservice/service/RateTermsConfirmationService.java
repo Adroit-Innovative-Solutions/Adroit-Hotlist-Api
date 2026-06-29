@@ -125,8 +125,11 @@ public class RateTermsConfirmationService {
 
     public Page<RateTermsConfirmationDTO> getRTRListByDate(String keyword, Map<String,Object> filters, Pageable pageable, String date){
 
-     return rtrRepository.rtrsByDate(keyword,filters,pageable,date)
-              .map(rtrMapper::toDtoFromEntity);
+        Page<RateTermsConfirmation> page = rtrRepository.rtrsByDate(keyword, filters, pageable, date);
+        Page<RateTermsConfirmationDTO> dtoPage = page.map(rtrMapper::toDtoFromEntity);
+        populateCreatedByName(dtoPage);
+
+        return dtoPage;
     }
 
     public Page<RateTermsConfirmationDTO> getCoordinatorRTRListByDate(
