@@ -173,13 +173,18 @@ public class ConsultantSpecifications {
                 .and(createFiltersSpecification(filters))
                 .and(applyStatusFilter(statusFilter));
      }
+    public static Specification<Consultant> isNotDirectRTR() {
+        return (root, query, cb) ->
+                cb.isFalse(root.get("isDirectRtr"));
+    }
      public static Specification<Consultant> allConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
-        return Specification.<Consultant>where(isNotDeleted())
-                .and(isMovedToHotlist())
-                .and(isOtherFullTime())
-                .and(createSearchSpecification(keyword))
-                .and(createFiltersSpecification(filters))
-                .and(applyStatusFilter(statusFilter));
+         return Specification.<Consultant>where(isNotDeleted())
+                 .and(isMovedToHotlist())
+                 .and(isOtherFullTime())
+                 .and(isNotDirectRTR())
+                 .and(createSearchSpecification(keyword))
+                 .and(createFiltersSpecification(filters))
+                 .and(applyStatusFilter(statusFilter));
      }
 
     public static Specification<Consultant> allW2ConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){

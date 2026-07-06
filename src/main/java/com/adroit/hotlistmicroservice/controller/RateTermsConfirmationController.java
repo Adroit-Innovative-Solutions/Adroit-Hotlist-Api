@@ -1,6 +1,7 @@
 package com.adroit.hotlistmicroservice.controller;
 
 import com.adroit.hotlistmicroservice.dto.*;
+import com.adroit.hotlistmicroservice.service.ConsultantService;
 import com.adroit.hotlistmicroservice.service.DirectRTRFileService;
 import com.adroit.hotlistmicroservice.service.RateTermsConfirmationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class RateTermsConfirmationController {
 
     @Autowired
     DirectRTRFileService directRTRFileService;
+
+    @Autowired
+    private ConsultantService consultantService;
 
     @PostMapping("/create-rtr/{userId}")
     public ResponseEntity<ApiResponse<RTRAddedResponse>> createRateConfirmation(
@@ -245,6 +249,21 @@ public class RateTermsConfirmationController {
         safeFilters.remove("toDate");
         safeFilters.remove("date");
         return safeFilters;
+    }
+    @GetMapping("/direct-rtr-consultants")
+    public ResponseEntity<ApiResponse<PageResponse<ConsultantDto>>> getDirectRTRConsultants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "updatedTimeStamp");
+
+        Page<ConsultantDto> consultants = consultantService.getDirectRTRConsultants(pageable);
+
+        PageResponse<ConsultantDto> pageResponse = new PageResponse<>(consultants);
+
+        ApiResponse<PageResponse<ConsultantDto>> response = new ApiResponse<>(true, "Direct RTR consultants fetched successfully", pageResponse, null);
+
+        return ResponseEntity.ok(response);
     }
 
 }
