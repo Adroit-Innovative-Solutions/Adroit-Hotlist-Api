@@ -56,6 +56,17 @@ public class Consultant {
     private String updatedBy;
     private String approvalStatus;
 
+    @Column(nullable = false)
+    private Boolean isDirectRtr = false;
+
+    public Boolean getDirectRtr() {return isDirectRtr;}
+
+    public void setDirectRtr(Boolean directRtr) {isDirectRtr = directRtr;}
+
+    public boolean isAssignAll() {return isAssignAll;}
+
+    public void setAssignAll(boolean assignAll) {isAssignAll = assignAll;}
+
     public String getRecruiterName() {
         return recruiterName;
     }

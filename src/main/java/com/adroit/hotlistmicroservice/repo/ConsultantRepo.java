@@ -83,4 +83,6 @@ public interface ConsultantRepo extends JpaRepository<Consultant,String>, JpaSpe
    default Page<Consultant> allGuestHouseConsultants(String keyword, Map<String, Object> filters, String statusFilter, Pageable pageable){
         return findAll(ConsultantSpecifications.getAllGuestHouseConsultants(keyword,filters,statusFilter),pageable);
     }
+
+    Page<Consultant> findByIsDirectRtrTrueAndIsDeletedFalse(Pageable pageable);
 }

@@ -62,7 +62,7 @@ public class ConsultantService {
         setUserNamesFromService(dto);
         validateExistingConsultants(dto);
 
-        Consultant consultantToSave = prepareConsultantForSave(dto, isAssignAll,isDirectRtr);
+        Consultant consultantToSave = prepareConsultantForSave(dto, isAssignAll, isDirectRtr);
         consultantToSave = saveConsultantWithDocuments(consultantToSave, resumes, documents);
 
         logger.info("Consultant {} Successfully with ID: {}",
@@ -144,7 +144,7 @@ public class ConsultantService {
         List<Consultant> softDeletedConsultants = filterSoftDeletedConsultants(existingConsultants);
 
         if (!softDeletedConsultants.isEmpty()) {
-            return restoreSoftDeletedConsultant(softDeletedConsultants.get(0), dto, isAssignAll);
+            return restoreSoftDeletedConsultant(softDeletedConsultants.get(0), dto, isAssignAll,isDirectRtr);
         } else {
             return createNewConsultant(dto, isAssignAll,isDirectRtr);
         }
@@ -159,7 +159,7 @@ public class ConsultantService {
                 .collect(Collectors.toList());
     }
 
-    private Consultant restoreSoftDeletedConsultant(Consultant deletedConsultant, ConsultantDto dto, boolean isAssignAll) {
+    private Consultant restoreSoftDeletedConsultant(Consultant deletedConsultant, ConsultantDto dto, boolean isAssignAll,boolean isDirectRtr) {
         logger.info("Restoring soft-deleted consultant ID: {}", deletedConsultant.getConsultantId());
 
         consultantMapper.updateConsultantFromDto(dto, deletedConsultant);
@@ -170,6 +170,7 @@ public class ConsultantService {
         deletedConsultant.setUpdatedTimeStamp(LocalDateTime.now());
         deletedConsultant.setIsAssignAll(isAssignAll);
         deletedConsultant.setMovedToHotlist(false);
+        deletedConsultant.setDirectRtr(true);
 
         return deletedConsultant;
     }
@@ -177,6 +178,9 @@ public class ConsultantService {
     private Consultant createNewConsultant(ConsultantDto dto, boolean isAssignAll,boolean isDirectRtr) {
         logger.info("Creating new consultant");
         Consultant consultant = consultantMapper.toEntity(dto);
+        consultant.setAssignAll(isAssignAll);
+        consultant.setDirectRtr(isDirectRtr);
+        logger.info("CREATE CONSULTANT -> isDirectRtr={}", consultant.getDirectRtr());
         if (!isDirectRtr) {
             consultant.setIsAssignAll(isAssignAll);
             consultant.setMovedToHotlist(false);
@@ -769,5 +773,9 @@ public class ConsultantService {
         Page<Consultant> list = consultantRepo.allGuestHouseConsultants(keyword,filters,statusFilter,pageable);
         Page<ConsultantDto> dtoList = list.map(consultantMapper::toDTO);
         return dtoList;
+    }
+    public Page<ConsultantDto> getDirectRTRConsultants(Pageable pageable) {
+        Page<Consultant> consultants = consultantRepo.findByIsDirectRtrTrueAndIsDeletedFalse(pageable);
+        return consultants.map(consultantMapper::toDTO);
     }
 }
