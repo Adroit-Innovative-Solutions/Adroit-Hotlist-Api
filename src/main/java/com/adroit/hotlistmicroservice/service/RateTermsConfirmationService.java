@@ -51,17 +51,28 @@ public class RateTermsConfirmationService {
     @Value("${user.microservice.url}")
     private String userMicroserviceUrl;
 
-    public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto){
+    public RTRAddedResponse createRTR(String userId, RateTermsConfirmationRequest rtrDto) {
 
-        RateTermsConfirmation rtr=rtrMapper.entityFromRequest(rtrDto);
+        RateTermsConfirmation rtr = rtrMapper.entityFromRequest(rtrDto);
+
         rtr.setRtrId(generateRtrId());
         rtr.setCreatedBy(userId);
-        ConsultantDto consultant=consultantService.getConsultantByID(rtrDto.getConsultantId());
+
+        ConsultantDto consultant = consultantService.getConsultantByID(rtrDto.getConsultantId());
+
         rtr.setConsultantName(consultant.getName());
         rtr.setSalesExecutiveId(consultant.getSalesExecutiveId());
         rtr.setSalesExecutive(consultant.getSalesExecutive());
         rtr.setTechnology(consultant.getTechnology());
-        RateTermsConfirmation savedRTR=rtrRepository.save(rtr);
+
+        ResponseEntity<ApiResponse<UserDto>> response =
+                userServiceClient.getUserByUserID(userId);
+
+        UserDto user = response.getBody().getData();
+
+        rtr.setRtrSalesExecutiveId(userId);
+        rtr.setRtrSalesExecutive(user.getUserName());
+        RateTermsConfirmation savedRTR = rtrRepository.save(rtr);
         return rtrMapper.toRtrAddedResponse(savedRTR);
     }
 
