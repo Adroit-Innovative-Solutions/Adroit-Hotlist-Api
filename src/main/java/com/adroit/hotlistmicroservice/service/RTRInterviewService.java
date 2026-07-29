@@ -58,6 +58,8 @@ public class RTRInterviewService {
            throw new ResourceNotFoundException("Interview Already Scheduled For RTR ID "+interviewDto.getRtrId());
 
        RTRInterview interview=rtrInterviewMapper.rtrToRTRInterview(rtr);
+        interview.setRtrSalesExecutiveId(rtr.getRtrSalesExecutiveId());
+        interview.setRtrSalesExecutive(rtr.getRtrSalesExecutive());
 
        interview.setInterviewId(generateInterviewId());
        interview.setInterviewLevel(interviewDto.getInterviewLevel());

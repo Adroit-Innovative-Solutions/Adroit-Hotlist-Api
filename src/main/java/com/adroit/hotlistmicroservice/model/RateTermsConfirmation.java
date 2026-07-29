@@ -34,6 +34,8 @@ public class RateTermsConfirmation extends BaseEntity{
     private String vendorLinkedIn;
     private String implementationPartner;
     private String comments;
+    private String rtrSalesExecutiveId;
+    private String rtrSalesExecutive;
 
 
     @PrePersist

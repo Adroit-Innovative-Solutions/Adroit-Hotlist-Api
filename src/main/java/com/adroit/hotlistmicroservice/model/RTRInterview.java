@@ -33,6 +33,8 @@ public class RTRInterview extends BaseEntity {
     private int duration;
     private Boolean isPlaced;
     private String remarks;
+    private String rtrSalesExecutiveId;
+    private String rtrSalesExecutive;
 
     @Lob
     @Column(name = "interview_history", columnDefinition = "TEXT")
