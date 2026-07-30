@@ -46,56 +46,80 @@ public class RTRInterviewService {
     @Value("${user.microservice.url}")
     private String userMicroserviceUrl;
 
+    public InterviewAddedDto scheduleInterview(ScheduleInterviewDto interviewDto, String userId) {
 
-    public InterviewAddedDto scheduleInterview(ScheduleInterviewDto interviewDto,String userId) {
+        log.info("Scheduling interview for RTR ID: {} by user: {}", interviewDto.getRtrId(), userId);
 
-       RateTermsConfirmation  rtr=rateTermsConfirmationRepository.findById(interviewDto.getRtrId()).
-               orElseThrow(()-> new ResourceNotFoundException("NO RTR Found with ID "+interviewDto.getRtrId()));
-       if(rtr.getIsDeleted()) throw new ResourceNotFoundException("NO RTR Found with ID "+interviewDto.getRtrId());
+        RateTermsConfirmation rtr = rateTermsConfirmationRepository.findById(interviewDto.getRtrId())
+                .orElseThrow(() -> new ResourceNotFoundException("NO RTR Found with ID " + interviewDto.getRtrId()));
 
-       Optional<RateTermsConfirmation> rtrInterview= rateTermsConfirmationRepository.findByRtrIdAndIsDeleted(interviewDto.getRtrId(),true);
-       if(rtrInterview.isPresent())
-           throw new ResourceNotFoundException("Interview Already Scheduled For RTR ID "+interviewDto.getRtrId());
+        if (rtr.getIsDeleted()) {
+            throw new ResourceNotFoundException("NO RTR Found with ID " + interviewDto.getRtrId());
+        }
 
-       RTRInterview interview=rtrInterviewMapper.rtrToRTRInterview(rtr);
-        interview.setRtrSalesExecutiveId(rtr.getRtrSalesExecutiveId());
-        interview.setRtrSalesExecutive(rtr.getRtrSalesExecutive());
+        // Check if interview already exists for this RTR
+        RTRInterview existingInterview = rtrInterviewRepository.findByRtrIdAndIsDeleted(interviewDto.getRtrId(), false);
+        if (existingInterview != null) {
+            throw new ResourceNotFoundException("Interview Already Scheduled For RTR ID " + interviewDto.getRtrId());
+        }
 
-       interview.setInterviewId(generateInterviewId());
-       interview.setInterviewLevel(interviewDto.getInterviewLevel());
-       interview.setInterviewDateTime(interviewDto.getInterviewDateTime());
-       interview.setInterviewerEmailId(interviewDto.getInterviewerEmailId());
-       interview.setZoomLink(interviewDto.getZoomLink());
-       interview.setCreatedBy(userId);
-       interview.setRemarks(interviewDto.getRemarks());
-       interview.setCreatedAt(LocalDateTime.now());
-       interview.setUpdatedAt(LocalDateTime.now());
+        RTRInterview interview = rtrInterviewMapper.rtrToRTRInterview(rtr);
+
+        // CRITICAL FIX: Set the sales executive ID from the userId parameter
+        interview.setRtrSalesExecutiveId(userId);
+        log.info("Setting rtrSalesExecutiveId to: {}", userId);
+
+        // Try to get the user name from user service
+        try {
+            ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(userId);
+            ApiResponse<UserDto> apiResponse = response.getBody();
+            if (apiResponse != null && apiResponse.getData() != null) {
+                interview.setRtrSalesExecutive(apiResponse.getData().getUserName());
+                log.info("Set rtrSalesExecutive to: {}", apiResponse.getData().getUserName());
+            } else {
+                interview.setRtrSalesExecutive(userId);
+                log.warn("User service returned null for userId: {}, using userId as name", userId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch user name for userId: {}, using userId as display name", userId);
+            interview.setRtrSalesExecutive(userId);
+        }
+
+        interview.setInterviewId(generateInterviewId());
+        interview.setInterviewLevel(interviewDto.getInterviewLevel());
+        interview.setInterviewDateTime(interviewDto.getInterviewDateTime());
+        interview.setInterviewerEmailId(interviewDto.getInterviewerEmailId());
+        interview.setZoomLink(interviewDto.getZoomLink());
+        interview.setCreatedBy(userId);
+        interview.setRemarks(interviewDto.getRemarks());
+        interview.setCreatedAt(LocalDateTime.now());
+        interview.setUpdatedAt(LocalDateTime.now());
 
         addInterviewHistory(interview, interviewDto.getInterviewLevel(), "SCHEDULED");
 
-       RTRInterview savedInterview=rtrInterviewRepository.save(interview);
+        RTRInterview savedInterview = rtrInterviewRepository.save(interview);
+        log.info("Interview saved successfully with ID: {}, rtrSalesExecutiveId: {}",
+                savedInterview.getInterviewId(), savedInterview.getRtrSalesExecutiveId());
 
-       return new InterviewAddedDto(savedInterview.getInterviewId(),savedInterview.getRtrId(),
-               savedInterview.getConsultantId(), savedInterview.getConsultantName());
+        return new InterviewAddedDto(savedInterview.getInterviewId(), savedInterview.getRtrId(),
+                savedInterview.getConsultantId(), savedInterview.getConsultantName());
     }
 
     public InterviewAddedDto updateInterview(UpdateInterviewDto updateInterviewDto, String userId) {
 
-        RTRInterview rtrInterview=getInterviewIsNotDeleted(updateInterviewDto.getInterviewId());
+        log.info("Updating interview: {} by user: {}", updateInterviewDto.getInterviewId(), userId);
+
+        RTRInterview rtrInterview = getInterviewIsNotDeleted(updateInterviewDto.getInterviewId());
 
         rtrInterviewMapper.updateInterviewFromDto(updateInterviewDto, rtrInterview);
         rtrInterview.setUpdatedBy(userId);
         rtrInterview.setUpdatedAt(LocalDateTime.now());
-        // if("PLACED".equalsIgnoreCase(updateInterviewDto.getInterviewStatus())){
-        //     rtrInterview.setIsPlaced(true);
-        // }else {
-        //     rtrInterview.setIsPlaced(false);
-        // }
+
         addInterviewHistory(rtrInterview, updateInterviewDto.getInterviewLevel(), updateInterviewDto.getInterviewStatus());
 
-        RTRInterview savedInterview=rtrInterviewRepository.save(rtrInterview);
+        RTRInterview savedInterview = rtrInterviewRepository.save(rtrInterview);
 
-        return new InterviewAddedDto(savedInterview.getInterviewId(),savedInterview.getRtrId(),
+        return new InterviewAddedDto(savedInterview.getInterviewId(), savedInterview.getRtrId(),
                 savedInterview.getConsultantId(), savedInterview.getConsultantName());
     }
 
@@ -111,8 +135,7 @@ public class RTRInterviewService {
                         new TypeReference<List<Map<String, Object>>>() {}
                 );
             } catch (Exception e) {
-                // Log error and continue with empty list
-                // e.g., logger.warn("Failed to read interview history", e);
+                log.warn("Failed to read interview history", e);
             }
         }
 
@@ -131,9 +154,9 @@ public class RTRInterviewService {
         }
     }
 
-    public void deleteInterview(String interviewId,String userId){
+    public void deleteInterview(String interviewId, String userId) {
 
-        RTRInterview rtrInterview=getInterviewIsNotDeleted(interviewId);
+        RTRInterview rtrInterview = getInterviewIsNotDeleted(interviewId);
 
         rtrInterview.setIsDeleted(true);
         rtrInterview.setDeletedBy(userId);
@@ -142,35 +165,40 @@ public class RTRInterviewService {
         rtrInterviewRepository.save(rtrInterview);
     }
 
-    public RTRInterviewDto getInterviewById(String interviewId){
+    public RTRInterviewDto getInterviewById(String interviewId) {
         return rtrInterviewMapper.rtrEntityToRTRDto(getInterviewIsNotDeleted(interviewId));
     }
 
-    public  RTRInterview getInterviewIsNotDeleted(String interviewId){
-        log.info("Fetching Interview ID "+interviewId);
-       return rtrInterviewRepository.findByInterviewIdAndIsDeleted(interviewId,false)
-                .orElseThrow(()-> new ResourceNotFoundException("No Interview Found With ID :"+interviewId));
+    public RTRInterview getInterviewIsNotDeleted(String interviewId) {
+        log.info("Fetching Interview ID " + interviewId);
+        return rtrInterviewRepository.findByInterviewIdAndIsDeleted(interviewId, false)
+                .orElseThrow(() -> new ResourceNotFoundException("No Interview Found With ID :" + interviewId));
     }
 
-    public Page<RTRInterviewDto> getAllInterviews(String keyword, Map<String,Object> filters, LocalDate fromDate, LocalDate toDate, Pageable pageable){
+    public Page<RTRInterviewDto> getAllInterviews(String keyword, Map<String, Object> filters, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
 
-        Page<RTRInterviewDto> map = rtrInterviewRepository.allInterviews(keyword, filters, fromDate, toDate,pageable)
+        Page<RTRInterviewDto> map = rtrInterviewRepository.allInterviews(keyword, filters, fromDate, toDate, pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
         getRTRInterviewDtoWithUserName(map);
         return map;
     }
 
-    public Page<RTRInterviewDto> getSalesInterviews(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
+    public Page<RTRInterviewDto> getSalesInterviews(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+
+        log.info("Fetching sales interviews for userId: {}", userId);
 
         Page<RTRInterviewDto> map = rtrInterviewRepository.salesInterviews(userId, keyword, filters, pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
+
+        log.info("Found {} sales interviews for userId: {}", map.getTotalElements(), userId);
+
         getRTRInterviewDtoWithUserName(map);
         return map;
     }
 
-    public Page<RTRInterviewDto> getTeamInterviews(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
+    public Page<RTRInterviewDto> getTeamInterviews(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
 
-       List<String> teamConsultants= consultantRepo.findConsultantIdsByTeamLeadId(userId);
+        List<String> teamConsultants = consultantRepo.findConsultantIdsByTeamLeadId(userId);
         Page<RTRInterviewDto> map = rtrInterviewRepository.teamInterviews(teamConsultants, keyword, filters, pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
         getRTRInterviewDtoWithUserName(map);
@@ -265,18 +293,21 @@ public class RTRInterviewService {
         return user.getUserId() != null ? user.getUserId() : user.getEmployeeId();
     }
 
-    public RTRInterviewDto getInterviewsByRtrId(String rtrId){
-
-        return rtrInterviewMapper.rtrEntityToRTRDto(rtrInterviewRepository.findByRtrIdAndIsDeleted(rtrId,false));
+    public RTRInterviewDto getInterviewsByRtrId(String rtrId) {
+        RTRInterview interview = rtrInterviewRepository.findByRtrIdAndIsDeleted(rtrId, false);
+        if (interview == null) {
+            throw new ResourceNotFoundException("No Interview Found For RTR ID: " + rtrId);
+        }
+        return rtrInterviewMapper.rtrEntityToRTRDto(interview);
     }
 
-    public String generateInterviewId(){
-            String lastRtrId=rtrInterviewRepository.findTopByOrderByInterviewIdDesc()
-                    .map(RTRInterview::getInterviewId)
-                    .orElse("INTER000000");
+    public String generateInterviewId() {
+        String lastRtrId = rtrInterviewRepository.findTopByOrderByInterviewIdDesc()
+                .map(RTRInterview::getInterviewId)
+                .orElse("INTER000000");
 
-            int num=Integer.parseInt(lastRtrId.replace("INTER",""))+1;
-            return String.format("INTER%06d",num);
+        int num = Integer.parseInt(lastRtrId.replace("INTER", "")) + 1;
+        return String.format("INTER%06d", num);
     }
 
     public void getRTRInterviewDtoWithUserName(Page<RTRInterviewDto> map) {

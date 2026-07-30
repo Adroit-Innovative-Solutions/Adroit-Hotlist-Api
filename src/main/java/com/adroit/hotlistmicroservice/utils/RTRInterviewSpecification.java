@@ -131,7 +131,7 @@ public class RTRInterviewSpecification {
         return Specification.where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.or(
-                                criteriaBuilder.equal(root.get("rtrSalesExecutiveId"), userId)
+                                criteriaBuilder.equal(root.get("createdBy"), userId)
                         ))
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters));
