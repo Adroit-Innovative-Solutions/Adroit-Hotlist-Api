@@ -329,5 +329,22 @@ public class RTRInterviewService {
             }
         }
     }
+    public Page<RTRInterviewDto> getConsultantInterviews(
+            String consultantId,
+            String keyword,
+            Map<String, Object> filters,
+            Pageable pageable) {
 
+        Page<RTRInterviewDto> page = rtrInterviewRepository
+                .consultantInterviews(
+                        consultantId,
+                        keyword,
+                        filters,
+                        pageable)
+                .map(rtrInterviewMapper::rtrEntityToRTRDto);
+
+        getRTRInterviewDtoWithUserName(page);
+
+        return page;
+    }
 }

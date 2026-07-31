@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -147,4 +148,45 @@ public class RTRInterviewController {
         return new ResponseEntity<>(apiResponse,HttpStatus.OK);
     }
 
+    @GetMapping("{consultantId}/interviews")
+    public ResponseEntity<ApiResponse<PageResponse<RTRInterviewDto>>> getConsultantInterviews(
+            @PathVariable String consultantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Map<String, Object> filters) {
+
+        if (filters == null) {
+            filters = new HashMap<>();
+        }
+
+        filters.remove("page");
+        filters.remove("size");
+        filters.remove("keyword");
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.Direction.DESC,
+                "interviewDateTime");
+
+        Page<RTRInterviewDto> interviews =
+                rtrInterviewService.getConsultantInterviews(
+                        consultantId,
+                        keyword,
+                        filters,
+                        pageable);
+
+        PageResponse<RTRInterviewDto> pageResponse =
+                new PageResponse<>(interviews);
+
+        ApiResponse<PageResponse<RTRInterviewDto>> response =
+                new ApiResponse<>(
+                        true,
+                        "Consultant interviews fetched successfully",
+                        pageResponse,
+                        null);
+
+        return ResponseEntity.ok(response);
+    }
 }

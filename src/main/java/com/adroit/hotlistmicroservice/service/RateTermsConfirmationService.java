@@ -329,4 +329,24 @@ public class RateTermsConfirmationService {
 
         return response.getBody();
     }
+
+    public Page<RateTermsConfirmationDTO> getConsultantRTRs(
+            String consultantId,
+            String keyword,
+            Map<String,Object> filters,
+            Pageable pageable){
+
+        Page<RateTermsConfirmationDTO> page =
+                rtrRepository
+                        .consultantRTRs(
+                                consultantId,
+                                keyword,
+                                filters,
+                                pageable)
+                        .map(rtrMapper::toDtoFromEntity);
+
+        populateCreatedByName(page);
+
+        return page;
+    }
 }
