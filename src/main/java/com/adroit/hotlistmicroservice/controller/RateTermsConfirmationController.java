@@ -266,4 +266,38 @@ public class RateTermsConfirmationController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{consultantId}/rtrs")
+    public ResponseEntity<ApiResponse<PageResponse<RateTermsConfirmationDTO>>> getConsultantRTRs(
+            @PathVariable String consultantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Map<String,Object> filters){
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.Direction.DESC,
+                "createdAt");
+
+        Page<RateTermsConfirmationDTO> rtrs =
+                rtrService.getConsultantRTRs(
+                        consultantId,
+                        keyword,
+                        filters,
+                        pageable);
+
+        PageResponse<RateTermsConfirmationDTO> pageResponse =
+                new PageResponse<>(rtrs);
+
+        ApiResponse<PageResponse<RateTermsConfirmationDTO>> response =
+                new ApiResponse<>(
+                        true,
+                        "Consultant RTRs fetched successfully",
+                        pageResponse,
+                        null);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

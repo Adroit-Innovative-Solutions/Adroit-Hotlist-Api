@@ -175,5 +175,18 @@ public class RTRInterviewSpecification {
                 criteriaBuilder.isFalse(root.get("isDeleted"));
     }
 
+    public static Specification<RTRInterview> consultantInterviews(
+            String consultantId,
+            String keyword,
+            Map<String, Object> filters) {
+
+        return Specification.where(isNotDeleted())
+                .and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("consultantId"), consultantId)
+                )
+                .and(createSearchSpecification(keyword))
+                .and(createFiltersSpecification(filters));
+    }
+
 
 }

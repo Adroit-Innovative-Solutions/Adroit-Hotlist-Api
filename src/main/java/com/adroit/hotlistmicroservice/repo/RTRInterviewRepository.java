@@ -54,4 +54,18 @@ public interface RTRInterviewRepository extends JpaRepository<RTRInterview,Strin
     }
 
     RTRInterview findByRtrIdAndIsDeleted(String rtrId,Boolean isDeleted);
+
+    default Page<RTRInterview> consultantInterviews(
+            String consultantId,
+            String keyword,
+            Map<String, Object> filters,
+            Pageable pageable) {
+
+        return findAll(
+                RTRInterviewSpecification.consultantInterviews(
+                        consultantId,
+                        keyword,
+                        filters),
+                pageable);
+    }
 }
