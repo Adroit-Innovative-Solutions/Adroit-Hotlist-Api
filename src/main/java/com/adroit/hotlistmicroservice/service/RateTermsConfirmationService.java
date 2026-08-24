@@ -95,9 +95,30 @@ public class RateTermsConfirmationService {
         return String.format("RTR%06d",num);
     }
 
-    public Page<RateTermsConfirmationDTO> getRTRList(String keyword, LocalDateTime fromDate, LocalDateTime toDate, Map<String,Object> filters,Pageable pageable){
+    public Page<RateTermsConfirmationDTO> getRTRList(String keyword, LocalDateTime fromDate, LocalDateTime toDate, Map<String, Object> filters, Pageable pageable) {
 
-        Page<RateTermsConfirmationDTO> map = rtrRepository.allRTRs(keyword, fromDate, toDate, filters, pageable)
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : new HashMap<>(filters);
+
+        // Submitted By filter
+        Object submittedBy = safeFilters.get("createdByName");
+
+        if (submittedBy != null && !submittedBy.toString().isBlank()) {
+
+            String submittedByName = submittedBy.toString().trim();
+
+            List<String> userIds = userDetailsRepository.findUserIdsByUserName(submittedByName);
+
+            // No user found with this name
+            if (userIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            // Remove UI field
+            safeFilters.remove("createdByName");
+            // Add actual database field
+            safeFilters.put("createdBy", userIds);
+        }
+
+        Page<RateTermsConfirmationDTO> map = rtrRepository.allRTRs(keyword, fromDate, toDate, safeFilters, pageable)
                 .map(rtrMapper::toDtoFromEntity);
         populateCreatedByName(map);
         return map;

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collection;
 
 @Component
 public class RTRSpecifications {
@@ -20,7 +21,7 @@ public class RTRSpecifications {
     private static final Set<String> ALLOWED_FIELDS = Set.of(
             "rtrId", "consultantId", "consultantName", "technology",
             "clientId", "clientName", "ratePart", "rtrStatus",
-            "salesExecutiveId", "salesExecutive","vendorName","vendorEmailId",
+            "salesExecutiveId", "salesExecutive","vendorName", "createdBy","vendorEmailId",
             "vendorMobileNumber","vendorCompany","implementationPartner","vendorLinkedIn","comments"
     );
 
@@ -51,42 +52,55 @@ public class RTRSpecifications {
         });
     }
 
-    private static Specification<RateTermsConfirmation> createFiltersSpecification(Map<String,Object> filters){
+    private static Specification<RateTermsConfirmation> createFiltersSpecification(Map<String, Object> filters) {
 
-        return ((root, query, criteriaBuilder) -> {
-            if(filters.isEmpty()){
+        return (root, query, criteriaBuilder) -> {
+
+            if (filters == null || filters.isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
 
-            List<Predicate> predicates=new ArrayList<>();
+            List<Predicate> predicates = new ArrayList<>();
 
-            filters.forEach((field,value)->{
-              if (value!=null && ALLOWED_FIELDS.contains(field)){
-                  switch (field){
-                      case "rtrId":
-                      case "consultantId":
-                      case "consultantName":
-                      case "technology":
-                      case "clientId":
-                      case "clientName":
-                      case "ratePart":
-                      case "rtrStatus":
-                      case "salesExecutiveId":
-                      case "salesExecutive":
-                      case "vendorName":
-                      case "vendorEmailId":
-                      case "vendorMobileNumber":
-                      case "vendorCompany":
-                      case "implementationPartner":
-                      case "vendorLinkedIn":
-                      case "comments":
-                          predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),value.toString()+"%"));
-                          break;
-                  }
-              }
+            filters.forEach((field, value) -> {
+
+                if (value != null && ALLOWED_FIELDS.contains(field)) {
+                    switch (field) {
+                        case "createdBy":
+                            if (value instanceof Collection<?> collection) {
+                                List<String> userIds = collection.stream().map(Object::toString).toList();
+                                if (!userIds.isEmpty()) {predicates.add(root.get("createdBy").in(userIds));}
+
+                            } else {
+                                predicates.add(criteriaBuilder.equal(root.get("createdBy"), value.toString()));
+                            }
+                            break;
+                        case "rtrId":
+                        case "consultantId":
+                        case "consultantName":
+                        case "technology":
+                        case "clientId":
+                        case "clientName":
+                        case "ratePart":
+                        case "rtrStatus":
+                        case "salesExecutiveId":
+                        case "salesExecutive":
+                        case "vendorName":
+                        case "vendorEmailId":
+                        case "vendorMobileNumber":
+                        case "vendorCompany":
+                        case "implementationPartner":
+                        case "vendorLinkedIn":
+                        case "comments":
+
+                            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)), value.toString().toLowerCase() + "%"));
+                            break;
+                    }
+                }
             });
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        });
+        };
     }
 
     public static Specification<RateTermsConfirmation> allRTRs(String keyword, LocalDateTime fromDate, LocalDateTime toDate, Map<String,Object> filters){
