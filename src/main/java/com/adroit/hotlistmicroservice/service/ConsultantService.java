@@ -578,6 +578,9 @@ public class ConsultantService {
         if (categories.contains("inactive") && !"INACTIVE".equalsIgnoreCase(user.getStatus())) {
             return false;
         }
+        if (categories.contains("isolated") && !"ISOLATED".equalsIgnoreCase(user.getStatus())) {
+            return false;
+        }
 
         return true;
     }
