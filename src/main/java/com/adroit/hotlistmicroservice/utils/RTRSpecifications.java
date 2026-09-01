@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collection;
 
 @Component
 public class RTRSpecifications {
@@ -24,6 +25,8 @@ public class RTRSpecifications {
             "salesExecutiveId", "salesExecutive","vendorName","vendorEmailId",
             "vendorMobileNumber","vendorCompany","implementationPartner","vendorLinkedIn","comments",
             "createdBy", "createdByName"
+            "salesExecutiveId", "salesExecutive","vendorName", "createdBy","vendorEmailId",
+            "vendorMobileNumber","vendorCompany","implementationPartner","vendorLinkedIn","comments"
     );
 
 
@@ -53,14 +56,15 @@ public class RTRSpecifications {
         });
     }
 
-    private static Specification<RateTermsConfirmation> createFiltersSpecification(Map<String,Object> filters){
+    private static Specification<RateTermsConfirmation> createFiltersSpecification(Map<String, Object> filters) {
 
-        return ((root, query, criteriaBuilder) -> {
-            if(filters == null || filters.isEmpty()){
+        return (root, query, criteriaBuilder) -> {
+
+            if (filters == null || filters.isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
 
-            List<Predicate> predicates=new ArrayList<>();
+            List<Predicate> predicates = new ArrayList<>();
 
             filters.forEach((field,value)->{
               if (value!=null && ALLOWED_FIELDS.contains(field)){
@@ -91,8 +95,9 @@ public class RTRSpecifications {
                   }
               }
             });
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        });
+        };
     }
 
     public static Specification<RateTermsConfirmation> allRTRs(String keyword, LocalDateTime fromDate, LocalDateTime toDate, Map<String,Object> filters){
