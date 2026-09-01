@@ -98,10 +98,15 @@ public class RateTermsConfirmationController {
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toDate,
             @RequestParam (required = false) Map<String,Object> filters
     ){
+        filters = sanitizeFilters(filters);
+        LocalDateTime[] dateRange = toDateRange(fromDate, toDate);
         Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
-        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getSalesRTRList(userId,keyword,filters,pageable);
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getSalesRTRList(
+                userId, keyword, dateRange[0], dateRange[1], filters, pageable);
 
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
 
@@ -115,10 +120,15 @@ public class RateTermsConfirmationController {
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toDate,
             @RequestParam (required = false) Map<String,Object> filters
     ){
+        filters = sanitizeFilters(filters);
+        LocalDateTime[] dateRange = toDateRange(fromDate, toDate);
         Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
-        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getTeamRtrs(userId,keyword,filters,pageable);
+        Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getTeamRtrs(
+                userId, keyword, dateRange[0], dateRange[1], filters, pageable);
 
         PageResponse<RateTermsConfirmationDTO> pageResponse=new PageResponse<>(rateTermsConfirmationDTOPage);
 
@@ -135,6 +145,7 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) Map<String,Object> filters,
             @RequestParam (required = false) String date
     ){
+        filters = sanitizeFilters(filters);
         Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getSalesRTRListByDate(userId,keyword,filters,pageable,date);
 
@@ -153,6 +164,7 @@ public class RateTermsConfirmationController {
             @RequestParam (required = false) Map<String,Object> filters,
             @RequestParam (required = false) String date
     ){
+        filters = sanitizeFilters(filters);
         Pageable pageable=PageRequest.of(page,size,Sort.Direction.DESC,"createdAt");
         Page<RateTermsConfirmationDTO> rateTermsConfirmationDTOPage=rtrService.getTeamRtrsByDate(userId,keyword,filters,pageable,date);
 
@@ -236,6 +248,18 @@ public class RateTermsConfirmationController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+    }
+
+    private LocalDateTime[] toDateRange(LocalDate fromDate, LocalDate toDate) {
+        if (fromDate != null && toDate == null) {
+            toDate = fromDate;
+        }
+        if (toDate != null && fromDate == null) {
+            fromDate = toDate;
+        }
+        LocalDateTime fromDateTime = fromDate != null ? fromDate.atStartOfDay() : null;
+        LocalDateTime toDateTime = toDate != null ? toDate.atTime(23, 59, 59) : null;
+        return new LocalDateTime[]{fromDateTime, toDateTime};
     }
 
     private Map<String, Object> sanitizeFilters(Map<String, Object> filters) {

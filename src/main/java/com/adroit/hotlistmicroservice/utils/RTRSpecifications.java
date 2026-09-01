@@ -1,12 +1,13 @@
 package com.adroit.hotlistmicroservice.utils;
 
-import com.adroit.hotlistmicroservice.model.RTRInterview;
 import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
+import com.adroit.hotlistmicroservice.model.UserDetails;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,8 @@ public class RTRSpecifications {
             "rtrId", "consultantId", "consultantName", "technology",
             "clientId", "clientName", "ratePart", "rtrStatus",
             "salesExecutiveId", "salesExecutive","vendorName","vendorEmailId",
-            "vendorMobileNumber","vendorCompany","implementationPartner","vendorLinkedIn","comments"
+            "vendorMobileNumber","vendorCompany","implementationPartner","vendorLinkedIn","comments",
+            "createdBy", "createdByName"
     );
 
 
@@ -54,7 +56,7 @@ public class RTRSpecifications {
     private static Specification<RateTermsConfirmation> createFiltersSpecification(Map<String,Object> filters){
 
         return ((root, query, criteriaBuilder) -> {
-            if(filters.isEmpty()){
+            if(filters == null || filters.isEmpty()){
                 return criteriaBuilder.conjunction();
             }
 
@@ -80,7 +82,11 @@ public class RTRSpecifications {
                       case "implementationPartner":
                       case "vendorLinkedIn":
                       case "comments":
-                          predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),value.toString()+"%"));
+                          predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),value.toString().toLowerCase()+"%"));
+                          break;
+                      case "createdBy":
+                      case "createdByName":
+                          predicates.add(createdByNameLike(root, query, criteriaBuilder, value.toString()));
                           break;
                   }
               }
@@ -117,14 +123,33 @@ public class RTRSpecifications {
         };
     }
 
-    public static Specification<RateTermsConfirmation> salesRTRs(String userId,String keyword,Map<String,Object> filters){
+    private static Predicate createdByNameLike(
+            Root<RateTermsConfirmation> root,
+            jakarta.persistence.criteria.CriteriaQuery<?> query,
+            jakarta.persistence.criteria.CriteriaBuilder criteriaBuilder,
+            String value) {
+        Subquery<String> subquery = query.subquery(String.class);
+        Root<UserDetails> userRoot = subquery.from(UserDetails.class);
+        String pattern = "%" + value.toLowerCase() + "%";
+        subquery.select(userRoot.get("userId"));
+        subquery.where(criteriaBuilder.or(
+                criteriaBuilder.like(criteriaBuilder.lower(userRoot.get("userName")), pattern),
+                criteriaBuilder.like(criteriaBuilder.lower(userRoot.get("userId")), pattern)
+        ));
+        return root.get("createdBy").in(subquery);
+    }
+
+    public static Specification<RateTermsConfirmation> salesRTRs(
+            String userId,
+            String keyword,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Map<String,Object> filters){
 
         return Specification.where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.or(
-                               // criteriaBuilder.equal(root.get("salesExecutiveId"),userId),
-                                criteriaBuilder.equal(root.get("createdBy"), userId)
-                        ))
+                        criteriaBuilder.equal(root.get("createdBy"), userId))
+                .and(createDateRangeSpecification(fromDate, toDate))
                 .and(createSearchSpecification(keyword))
                 .and(createFiltersSpecification(filters));
     }
@@ -145,7 +170,12 @@ public class RTRSpecifications {
             criteriaBuilder.isFalse(root.get("isDeleted"));
     }
 
-    public static Specification<RateTermsConfirmation> teamRtrs(List<String> consultantIds, String keyword, Map<String, Object> filters) {
+    public static Specification<RateTermsConfirmation> teamRtrs(
+            List<String> consultantIds,
+            String keyword,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Map<String, Object> filters) {
         return Specification
                 .where(isNotDeleted())
                 .and((root, query, criteriaBuilder) -> {
@@ -155,6 +185,7 @@ public class RTRSpecifications {
                         return criteriaBuilder.conjunction();
                     }
                 })
+                .and(createDateRangeSpecification(fromDate, toDate))
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword));
     }

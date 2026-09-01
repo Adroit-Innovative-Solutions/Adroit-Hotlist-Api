@@ -86,13 +86,7 @@ public class RTRInterviewController {
        if (filters == null) {
            filters = new java.util.HashMap<>();
        }
-       filters.remove("page");
-       filters.remove("size");
-       filters.remove("keyword");
-       filters.remove("coordinator");
-       filters.remove("userId");
-       filters.remove("fromDate");
-       filters.remove("toDate");
+       filters = sanitizeInterviewFilters(filters);
 
        Page<RTRInterviewDto> rtrInterviewDtoPage = coordinator
                ? rtrInterviewService.getCoordinatorInterviews(userId, keyword, filters, fromDate, toDate, pageable)
@@ -108,6 +102,12 @@ public class RTRInterviewController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate toDate,
             @RequestParam (required = false) Map<String,Object> filters
     ){
         Pageable pageable= PageRequest.of(
@@ -115,7 +115,10 @@ public class RTRInterviewController {
                 size,
                 Sort.Direction.DESC,"updatedAt");
 
-        Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getSalesInterviews(userId,keyword,filters,pageable);
+        filters = sanitizeInterviewFilters(filters);
+
+        Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getSalesInterviews(
+                userId, keyword, filters, fromDate, toDate, pageable);
         PageResponse pageResponse=new PageResponse(rtrInterviewDtoPage);
         ApiResponse apiResponse=new ApiResponse(true,"Interviews Fetched Successfully",pageResponse,null);
 
@@ -128,11 +131,20 @@ public class RTRInterviewController {
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "10") int size,
             @RequestParam (required = false) String keyword,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate toDate,
             @RequestParam (required = false) Map<String,Object> filters
     ){
        Pageable pageable=PageRequest.of(page,size, Sort.Direction.DESC,"updatedAt");
 
-       Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getTeamInterviews(userId,keyword,filters,pageable);
+       filters = sanitizeInterviewFilters(filters);
+
+       Page<RTRInterviewDto> rtrInterviewDtoPage=rtrInterviewService.getTeamInterviews(
+               userId, keyword, filters, fromDate, toDate, pageable);
        PageResponse pageResponse=new PageResponse<>(rtrInterviewDtoPage);
        ApiResponse apiResponse=new ApiResponse<>(true,"Team Interviews Fetched Successfully",pageResponse,null);
 
@@ -188,5 +200,20 @@ public class RTRInterviewController {
                         null);
 
         return ResponseEntity.ok(response);
+    }
+
+    private Map<String, Object> sanitizeInterviewFilters(Map<String, Object> filters) {
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : new HashMap<>(filters);
+        safeFilters.remove("page");
+        safeFilters.remove("size");
+        safeFilters.remove("keyword");
+        safeFilters.remove("search");
+        safeFilters.remove("coordinator");
+        safeFilters.remove("userId");
+        safeFilters.remove("fromDate");
+        safeFilters.remove("toDate");
+        safeFilters.remove("createdAtFrom");
+        safeFilters.remove("createdAtTo");
+        return safeFilters;
     }
 }

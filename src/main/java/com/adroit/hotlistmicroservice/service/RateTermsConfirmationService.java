@@ -172,38 +172,39 @@ public class RateTermsConfirmationService {
         return dtoPage;
     }
 
-    public Page<RateTermsConfirmationDTO> getSalesRTRList(String userId,String keyword,Map<String ,Object> filters,Pageable pageable){
+    public Page<RateTermsConfirmationDTO> getSalesRTRList(
+            String userId,
+            String keyword,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Map<String ,Object> filters,
+            Pageable pageable){
 
-        return rtrRepository.salesRTRs(userId, keyword, filters, pageable)
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : filters;
+        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.salesRTRs(
+                        userId, keyword, fromDate, toDate, safeFilters, pageable)
                 .map(rtrMapper::toDtoFromEntity);
+
+        populateCreatedByName(dtoPage);
+        return dtoPage;
     }
 
-    public Page<RateTermsConfirmationDTO> getTeamRtrs(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+    public Page<RateTermsConfirmationDTO> getTeamRtrs(
+            String userId,
+            String keyword,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            Map<String, Object> filters,
+            Pageable pageable) {
         List<String> teamConsultants = consultantRepo.findConsultantIdsByTeamLeadId(userId);
         log.info("No. of consultants found: {} | Consultant IDs: {}", teamConsultants.size(), teamConsultants);
 
-        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.teamRtrs(teamConsultants, keyword, filters, pageable)
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : filters;
+        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.teamRtrs(
+                        teamConsultants, keyword, fromDate, toDate, safeFilters, pageable)
                 .map(rtrMapper::toDtoFromEntity);
 
-        // ✅ Populate createdByName using existing Feign client call
-        dtoPage.forEach(dto -> {
-            try {
-                if (dto.getCreatedBy() != null) {
-                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
-                    ApiResponse<UserDto> apiResponse = response.getBody();
-
-                    if (apiResponse != null && apiResponse.getData() != null) {
-                        dto.setCreatedByName(apiResponse.getData().getUserName());
-                    } else {
-                        dto.setCreatedByName("Unknown");
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
-                dto.setCreatedByName("Unknown");
-            }
-        });
-
+        populateCreatedByName(dtoPage);
         return dtoPage;
     }
 
@@ -266,19 +267,37 @@ public class RateTermsConfirmationService {
 
     private void populateCreatedByName(Page<RateTermsConfirmationDTO> dtoPage) {
         dtoPage.forEach(dto -> {
-            dto.setCreatedByName(userDetailsRepository.findUserNameByUserId(dto.getCreatedBy()));
+            String createdBy = dto.getCreatedBy();
+
+            if (createdBy == null || createdBy.isBlank()) {
+                dto.setCreatedByName("Unknown");
+                return;
+            }
+
+            String userName = userDetailsRepository.findUserNameByUserId(createdBy);
+
+            // Fall back to the raw id rather than an empty cell when the user
+            // row is missing, which is what made this column look broken.
+            dto.setCreatedByName(
+                    (userName == null || userName.isBlank()) ? createdBy : userName);
         });
     }
 
     public Page<RateTermsConfirmationDTO> getSalesRTRListByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {
-        return rtrRepository.salesRTRsByDate(userId, keyword, filters, pageable, date)
+        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.salesRTRsByDate(userId, keyword, filters, pageable, date)
                 .map(rtrMapper::toDtoFromEntity);
+
+        populateCreatedByName(dtoPage);
+        return dtoPage;
     }
 
     public Page<RateTermsConfirmationDTO> getTeamRtrsByDate(String userId, String keyword, Map<String, Object> filters, Pageable pageable, String date) {
         List<String> teamConsultants = consultantRepo.findConsultantIdsByTeamLeadId(userId);
-        return rtrRepository.teamRtrsByDate(teamConsultants, keyword, filters, pageable, date)
+        Page<RateTermsConfirmationDTO> dtoPage = rtrRepository.teamRtrsByDate(teamConsultants, keyword, filters, pageable, date)
                 .map(rtrMapper::toDtoFromEntity);
+
+        populateCreatedByName(dtoPage);
+        return dtoPage;
     }
 
 

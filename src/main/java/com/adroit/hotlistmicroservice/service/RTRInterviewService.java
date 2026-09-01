@@ -183,11 +183,19 @@ public class RTRInterviewService {
         return map;
     }
 
-    public Page<RTRInterviewDto> getSalesInterviews(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+    public Page<RTRInterviewDto> getSalesInterviews(
+            String userId,
+            String keyword,
+            Map<String, Object> filters,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable) {
 
         log.info("Fetching sales interviews for userId: {}", userId);
 
-        Page<RTRInterviewDto> map = rtrInterviewRepository.salesInterviews(userId, keyword, filters, pageable)
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : filters;
+        Page<RTRInterviewDto> map = rtrInterviewRepository.salesInterviews(
+                        userId, keyword, safeFilters, fromDate, toDate, pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
 
         log.info("Found {} sales interviews for userId: {}", map.getTotalElements(), userId);
@@ -196,10 +204,18 @@ public class RTRInterviewService {
         return map;
     }
 
-    public Page<RTRInterviewDto> getTeamInterviews(String userId, String keyword, Map<String, Object> filters, Pageable pageable) {
+    public Page<RTRInterviewDto> getTeamInterviews(
+            String userId,
+            String keyword,
+            Map<String, Object> filters,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable) {
 
         List<String> teamConsultants = consultantRepo.findConsultantIdsByTeamLeadId(userId);
-        Page<RTRInterviewDto> map = rtrInterviewRepository.teamInterviews(teamConsultants, keyword, filters, pageable)
+        Map<String, Object> safeFilters = filters == null ? new HashMap<>() : filters;
+        Page<RTRInterviewDto> map = rtrInterviewRepository.teamInterviews(
+                        teamConsultants, keyword, safeFilters, fromDate, toDate, pageable)
                 .map(rtrInterviewMapper::rtrEntityToRTRDto);
         getRTRInterviewDtoWithUserName(map);
         return map;

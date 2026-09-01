@@ -1,9 +1,10 @@
 package com.adroit.hotlistmicroservice.utils;
 
 import com.adroit.hotlistmicroservice.model.RTRInterview;
-import com.fasterxml.jackson.databind.ObjectReader;
+import com.adroit.hotlistmicroservice.model.UserDetails;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.boot.autoconfigure.rsocket.RSocketProperties;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +23,7 @@ public class RTRInterviewSpecification {
             "interviewId", "rtrId", "consultantId", "consultantName", "consultantEmailId",
             "technology", "clientId", "clientName", "salesExecutiveId", "salesExecutive",
             "interviewLevel", "interviewStatus", "interviewDateTime",
-            "interviewerEmailId"
+            "interviewerEmailId", "createdBy"
     );
 
     public static Specification<RTRInterview> createSearchSpecification(String keyword){
@@ -54,7 +55,7 @@ public class RTRInterviewSpecification {
     private static Specification<RTRInterview> createFiltersSpecification(Map<String,Object> filters){
 
         return ((root, query, criteriaBuilder) -> {
-            if(filters.isEmpty()){
+            if(filters == null || filters.isEmpty()){
                 return criteriaBuilder.conjunction();
             }
 
@@ -81,9 +82,39 @@ public class RTRInterviewSpecification {
                                         value.toString().toLowerCase() + "%"
                                 ));
                                 break;
+                            case "createdBy":
+                                predicates.add(createdByNameLike(root, query, criteriaBuilder, value.toString()));
+                                break;
+                            case "interviewDateTime":
+                                LocalDate interviewDate = parseFlexibleDate(value.toString());
+                                if (interviewDate != null) {
+                                    predicates.add(criteriaBuilder.between(
+                                            root.get("interviewDateTime"),
+                                            interviewDate.atStartOfDay(),
+                                            interviewDate.atTime(LocalTime.MAX)
+                                    ));
+                                }
+                                break;
                         }
                     }
             });
+
+            LocalDate interviewFrom = parseFlexibleDate(asFilterString(filters.get("interviewDateTimeFrom")));
+            LocalDate interviewTo = parseFlexibleDate(asFilterString(filters.get("interviewDateTimeTo")));
+            if (interviewFrom != null || interviewTo != null) {
+                if (interviewFrom == null) {
+                    interviewFrom = interviewTo;
+                }
+                if (interviewTo == null) {
+                    interviewTo = interviewFrom;
+                }
+                predicates.add(criteriaBuilder.between(
+                        root.get("interviewDateTime"),
+                        interviewFrom.atStartOfDay(),
+                        interviewTo.atTime(LocalTime.MAX)
+                ));
+            }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         });
     }
@@ -119,6 +150,41 @@ public class RTRInterviewSpecification {
         };
     }
 
+    private static Predicate createdByNameLike(
+            Root<RTRInterview> root,
+            jakarta.persistence.criteria.CriteriaQuery<?> query,
+            jakarta.persistence.criteria.CriteriaBuilder criteriaBuilder,
+            String value) {
+        Subquery<String> subquery = query.subquery(String.class);
+        Root<UserDetails> userRoot = subquery.from(UserDetails.class);
+        String pattern = "%" + value.toLowerCase() + "%";
+        subquery.select(userRoot.get("userId"));
+        subquery.where(criteriaBuilder.or(
+                criteriaBuilder.like(criteriaBuilder.lower(userRoot.get("userName")), pattern),
+                criteriaBuilder.like(criteriaBuilder.lower(userRoot.get("userId")), pattern)
+        ));
+        return root.get("createdBy").in(subquery);
+    }
+
+    private static String asFilterString(Object value) {
+        return value == null ? null : value.toString();
+    }
+
+    private static LocalDate parseFlexibleDate(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+        String value = rawValue.trim();
+        try {
+            if (value.length() >= 10 && value.charAt(4) == '-' && value.charAt(7) == '-') {
+                return LocalDate.parse(value.substring(0, 10));
+            }
+            return LocalDate.parse(value);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
 
     public static Specification<RTRInterview> allInterviews(String keyword, Map<String, Object> filters, LocalDate fromDate, LocalDate toDate){
         return Specification.where(isNotDeleted())
@@ -127,17 +193,26 @@ public class RTRInterviewSpecification {
                 .and(createdAtDateFilter(fromDate, toDate));
     }
 
-    public static Specification<RTRInterview> salesInterviews(String keyword,Map<String,Object> filters,String userId){
+    public static Specification<RTRInterview> salesInterviews(
+            String keyword,
+            Map<String,Object> filters,
+            String userId,
+            LocalDate fromDate,
+            LocalDate toDate){
         return Specification.where(isNotDeleted())
                 .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.or(
-                                criteriaBuilder.equal(root.get("createdBy"), userId)
-                        ))
+                        criteriaBuilder.equal(root.get("createdBy"), userId))
                 .and(createSearchSpecification(keyword))
-                .and(createFiltersSpecification(filters));
+                .and(createFiltersSpecification(filters))
+                .and(createdAtDateFilter(fromDate, toDate));
     }
 
-    public static Specification<RTRInterview> teamInterviews(List<String> consultantIds, String keyword, Map<String, Object> filters) {
+    public static Specification<RTRInterview> teamInterviews(
+            List<String> consultantIds,
+            String keyword,
+            Map<String, Object> filters,
+            LocalDate fromDate,
+            LocalDate toDate) {
         return Specification
                 .where(isNotDeleted())
                 .and((root, query, criteriaBuilder) -> {
@@ -147,7 +222,8 @@ public class RTRInterviewSpecification {
                     return root.get("consultantId").in(consultantIds);
                 })
                 .and(createFiltersSpecification(filters))
-                .and(createSearchSpecification(keyword));
+                .and(createSearchSpecification(keyword))
+                .and(createdAtDateFilter(fromDate, toDate));
     }
 
     public static Specification<RTRInterview> coordinatorInterviews(

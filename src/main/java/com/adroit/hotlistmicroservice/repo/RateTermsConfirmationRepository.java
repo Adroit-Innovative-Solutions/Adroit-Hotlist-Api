@@ -21,12 +21,24 @@ public interface RateTermsConfirmationRepository extends JpaRepository<RateTerms
       return findAll(RTRSpecifications.allRTRs(keyword, fromDate, toDate, filters),pageable);
    }
 
-   default Page<RateTermsConfirmation> salesRTRs(String userId,String keyword,Map<String,Object> filters,Pageable pageable){
-       return findAll(RTRSpecifications.salesRTRs(userId, keyword, filters),pageable);
+   default Page<RateTermsConfirmation> salesRTRs(
+           String userId,
+           String keyword,
+           LocalDateTime fromDate,
+           LocalDateTime toDate,
+           Map<String,Object> filters,
+           Pageable pageable){
+       return findAll(RTRSpecifications.salesRTRs(userId, keyword, fromDate, toDate, filters),pageable);
    }
 
-   default Page<RateTermsConfirmation> teamRtrs(List<String> consultantIds, String keyword, Map<String,Object> filters, Pageable pageable){
-        return findAll(RTRSpecifications.teamRtrs(consultantIds,keyword,filters),pageable);
+   default Page<RateTermsConfirmation> teamRtrs(
+           List<String> consultantIds,
+           String keyword,
+           LocalDateTime fromDate,
+           LocalDateTime toDate,
+           Map<String,Object> filters,
+           Pageable pageable){
+        return findAll(RTRSpecifications.teamRtrs(consultantIds, keyword, fromDate, toDate, filters),pageable);
     }
 
    default Page<RateTermsConfirmation> coordinatorRtrs(
