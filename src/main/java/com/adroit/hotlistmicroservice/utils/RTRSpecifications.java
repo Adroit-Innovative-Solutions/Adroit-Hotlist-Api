@@ -25,8 +25,6 @@ public class RTRSpecifications {
             "salesExecutiveId", "salesExecutive","vendorName","vendorEmailId",
             "vendorMobileNumber","vendorCompany","implementationPartner","vendorLinkedIn","comments",
             "createdBy", "createdByName"
-            "salesExecutiveId", "salesExecutive","vendorName", "createdBy","vendorEmailId",
-            "vendorMobileNumber","vendorCompany","implementationPartner","vendorLinkedIn","comments"
     );
 
 
