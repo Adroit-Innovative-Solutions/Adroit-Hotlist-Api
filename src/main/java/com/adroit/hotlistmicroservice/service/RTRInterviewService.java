@@ -9,6 +9,7 @@ import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
 import com.adroit.hotlistmicroservice.repo.RTRInterviewRepository;
 import com.adroit.hotlistmicroservice.repo.RateTermsConfirmationRepository;
+import com.adroit.hotlistmicroservice.repo.UserDetailsRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,9 @@ public class RTRInterviewService {
 
     @Value("${user.microservice.url}")
     private String userMicroserviceUrl;
+
+    @Autowired
+    private UserDetailsRepository userDetailsRepository;
 
     public InterviewAddedDto scheduleInterview(ScheduleInterviewDto interviewDto, String userId) {
 
@@ -327,23 +331,22 @@ public class RTRInterviewService {
     }
 
     public void getRTRInterviewDtoWithUserName(Page<RTRInterviewDto> map) {
-        for (RTRInterviewDto dto : map) {
-            try {
-                if (dto.getCreatedBy() != null) {
-                    ResponseEntity<ApiResponse<UserDto>> response = userServiceClient.getUserByUserID(dto.getCreatedBy());
-                    ApiResponse<UserDto> apiResponse = response.getBody();
+        map.forEach(dto -> {
+            String createdBy = dto.getCreatedBy();
 
-                    if (apiResponse != null && apiResponse.getData() != null) {
-                        dto.setCreatedBy(apiResponse.getData().getUserName());
-                    } else {
-                        dto.setCreatedBy("Unknown");
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to fetch username for userId: {}", dto.getCreatedBy(), e);
+            if (createdBy == null || createdBy.isBlank()) {
                 dto.setCreatedBy("Unknown");
+                return;
             }
-        }
+
+            String userName = userDetailsRepository.findUserNameByUserId(createdBy);
+
+            dto.setCreatedBy(
+                    (userName == null || userName.isBlank())
+                            ? createdBy
+                            : userName
+            );
+        });
     }
     public Page<RTRInterviewDto> getConsultantInterviews(
             String consultantId,
