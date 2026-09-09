@@ -543,7 +543,8 @@ public class ConsultantService {
                     String searchTerm = search.toLowerCase().trim();
 
                     // Search in name, email, role, and phonenumber fields
-                    return (user.getUserName() != null && user.getUserName().toLowerCase().contains(searchTerm)) ||
+                    return (user.getUserId() != null && user.getUserId().toLowerCase().contains(searchTerm)) ||
+                            (user.getUserName() != null && user.getUserName().toLowerCase().contains(searchTerm)) ||
                             (user.getEmail() != null && user.getEmail().toLowerCase().contains(searchTerm)) ||
                             (user.getRoles() != null && user.getRoles().stream().anyMatch(role -> role != null && role.toString().toLowerCase().contains(searchTerm))) ||
                             (user.getPhoneNumber() != null && user.getPhoneNumber().contains(searchTerm));
