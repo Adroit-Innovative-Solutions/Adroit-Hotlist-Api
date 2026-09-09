@@ -325,7 +325,9 @@ public class ConsultantService {
         return existingConsultant;
     }
 
-    public ConsultantAddedResponse updateConsultant(String consultantId, ConsultantDto dto) {
+    public ConsultantAddedResponse updateConsultant(String consultantId,
+                                                    ConsultantDto dto, List<MultipartFile> resumes,
+                                                    List<MultipartFile> documents) throws IOException {
 
         logger.info("Updating the Consultant {}",consultantId);
         Optional<Consultant> optionalConsultant = consultantRepo.findById(consultantId);
@@ -352,7 +354,7 @@ public class ConsultantService {
         Consultant existingConsultant=optionalConsultant.get();
         Consultant updatedConsultant=consultantMapper.toEntity(dto);
         Consultant finalConsultant=updateExistingHotListWithUpdatedHotList(existingConsultant,updatedConsultant);
-        consultantRepo.save(finalConsultant);
+        finalConsultant = saveConsultantWithDocuments(finalConsultant, resumes, documents);
         logger.info("Consultant {} is updated Successfully");
 
         return consultantMapper.toConsultantAddedResponse(finalConsultant);
