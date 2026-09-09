@@ -85,19 +85,28 @@ public class ConsultantController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping(value = "/updateConsultant/{consultantId}",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/updateConsultant/{consultantId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<ApiResponse<ConsultantAddedResponse>> updateConsultant(
             @PathVariable String consultantId,
-            @RequestBody ConsultantDto consultantDto
-    ){
-        logger.info("In Coming Request For Updating Consultant for ID {}",consultantId);
-       ConsultantAddedResponse response= consultantService.updateConsultant(consultantId,consultantDto);
-       ApiResponse<ConsultantAddedResponse> apiResponse=new ApiResponse<>(
-               true,
-               "Consultant details updated successfully.",
-               response,
-               null);
-       return new ResponseEntity<>(apiResponse,HttpStatus.OK);
+            @ModelAttribute ConsultantDto consultantDto,
+            @RequestParam(value = "resumes", required = false) List<MultipartFile> resumes,
+            @RequestParam(value = "documents", required = false) List<MultipartFile> documents
+    ) throws IOException {
+
+        logger.info("In Coming Request For Updating Consultant for ID {}", consultantId);
+
+        ConsultantAddedResponse response = consultantService.updateConsultant(
+                        consultantId,
+                        consultantDto,
+                        resumes,
+                        documents
+                );
+
+        ApiResponse<ConsultantAddedResponse> apiResponse = new ApiResponse<>(true, "Consultant details updated successfully.", response, null);
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
     @DeleteMapping("/deleteConsultant/{consultantId}/{userId}")
     public ApiResponse<DeleteConsultantResponse> deleteConsultantById(
