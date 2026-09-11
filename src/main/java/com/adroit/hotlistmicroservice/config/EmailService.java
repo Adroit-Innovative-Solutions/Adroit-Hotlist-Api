@@ -18,13 +18,14 @@ public class EmailService {
     private String senderEmail;
 
     public void sendHtmlEmail(/*List<String> toList */ String email, String subject, String htmlBody){
-
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email recipient is required");
+        }
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
             mimeMessageHelper.setFrom(senderEmail);
-            //mimeMessageHelper.setTo(toList.toArray(new String[0]));
             mimeMessageHelper.setTo(email);
             mimeMessageHelper.setSubject(subject);
             mimeMessageHelper.setText(htmlBody,true);
@@ -43,10 +44,10 @@ public class EmailService {
 
             String subject = "Your Login Credentials for MyMulya";
             String htmlBody = buildHtmlPasswordEmailBody(userName, password,to);
-            helper.setFrom("notifications@adroitinnovative.com"); // 👈 force sender
+            helper.setFrom(senderEmail);
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(htmlBody, true);  // true for HTML
+            helper.setText(htmlBody, true);
             javaMailSender.send(message);
 
         } catch (Exception e) {

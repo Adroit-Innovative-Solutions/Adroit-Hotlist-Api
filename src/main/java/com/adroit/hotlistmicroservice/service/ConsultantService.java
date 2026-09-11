@@ -685,37 +685,37 @@ public class ConsultantService {
         if(isApproved) {
             switch (currentStatus){
                 case "NOT_RAISED":
-                    //emailIds.put(getUserNameByUserId(consultant.getTeamLeadId()), getUserEmailByUserId(consultant.getTeamLeadId()));
-//                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
-//                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-//                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-//                            ,getUserNameByUserId(userId));
+                    putRecipientEmail(emailIds, consultant.getTeamLeadId());
+                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,safeUserName(userId));
                     consultant.setApprovalStatus("TL_PENDING");
                     break;
                 case "TL_PENDING":
-                    //emailIds=getUserEmailIdsByRole("ADMIN");
-//                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
-//                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-//                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-//                            ,getUserNameByUserId(userId));
+                    emailIds.putAll(safeEmailsByRole("ADMIN"));
+                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,safeUserName(userId));
                     consultant.setApprovalStatus("ADMIN_PENDING");
                     break;
                 case "ADMIN_PENDING":
-                    //emailIds=getUserEmailIdsByRole("SUPERADMIN");
                     logger.info("ADMIN_PENDING :-- Email sending to Super Admin");
-//                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
-//                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-//                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-//                            ,getUserNameByUserId(userId));
+                    emailIds.putAll(safeEmailsByRole("SUPERADMIN"));
+                    emailNotificationUtil.sendConsultantApprovalRequestEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,safeUserName(userId));
                     consultant.setApprovalStatus("SADMIN_PENDING");
                     break;
                 case "SADMIN_PENDING":
-                   // emailIds.put(consultant.getRecruiterName(),getUserEmailByUserId(consultant.getRecruiterId()));
-                    //emailIds.put(consultant.getTeamleadName(),getUserEmailByUserId(consultant.getTeamLeadId()));
-//                    emailNotificationUtil.sendConsultantApprovedEmail(
-//                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-//                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-//                            ,getUserNameByUserId(userId));
+                    putRecipientEmail(emailIds, consultant.getRecruiterId());
+                    putRecipientEmail(emailIds, consultant.getTeamLeadId());
+                    emailNotificationUtil.sendConsultantApprovedEmail(
+                            emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                            ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                            ,safeUserName(userId));
                     consultant.setApprovalStatus("APPROVED");
                     break;
                 case "REJECTED":
@@ -726,12 +726,12 @@ public class ConsultantService {
                     break;
             }
         }  else {
-//            emailIds.put(consultant.getRecruiterName(),getUserEmailByUserId(consultant.getRecruiterId()));
-//            emailIds.put(consultant.getTeamleadName(),getUserEmailByUserId(consultant.getTeamLeadId()));
-//            emailNotificationUtil.sendConsultantRejectedEmail(
-//                    emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
-//                    ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
-//                    ,getUserNameByUserId(userId));
+            putRecipientEmail(emailIds, consultant.getRecruiterId());
+            putRecipientEmail(emailIds, consultant.getTeamLeadId());
+            emailNotificationUtil.sendConsultantRejectedEmail(
+                    emailIds,consultant.getConsultantId(),consultant.getName(), consultant.getTechnology()
+                    ,consultant.getTeamleadName(),consultant.getSalesExecutive(),consultant.getRecruiterName()
+                    ,safeUserName(userId));
             consultant.setApprovalStatus("REJECTED");
         }
        return consultant;
@@ -743,6 +743,47 @@ public class ConsultantService {
 
         return userDto.getEmail();
     }
+
+    private void putRecipientEmail(Map<String, String> recipients, String userId) {
+        if (userId == null || userId.isBlank()) {
+            return;
+        }
+        try {
+            UserDto userDto = userServiceClient.getUserByUserID(userId).getBody().getData();
+            if (userDto == null) {
+                logger.warn("No user found for email recipient id {}", userId);
+                return;
+            }
+            String email = userDto.getEmail();
+            if (email == null || email.isBlank()) {
+                logger.warn("User {} has no email; skipping notification", userId);
+                return;
+            }
+            String name = userDto.getUserName() != null ? userDto.getUserName() : userId;
+            recipients.put(name, email);
+        } catch (Exception e) {
+            logger.warn("Could not resolve email for user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    private String safeUserName(String userId) {
+        try {
+            return getUserNameByUserId(userId);
+        } catch (Exception e) {
+            logger.warn("Could not resolve user name for {}: {}", userId, e.getMessage());
+            return userId;
+        }
+    }
+
+    private Map<String, String> safeEmailsByRole(String role) {
+        try {
+            Map<String, String> emails = getUserEmailIdsByRole(role);
+            return emails != null ? emails : Map.of();
+        } catch (Exception e) {
+            logger.warn("Could not load emails for role {}: {}", role, e.getMessage());
+            return Map.of();
+        }
+    }
     public String getUserNameByUserId(String userId){
 
        return userServiceClient.getUserByUserID(userId).getBody().getData().getUserName();
@@ -753,18 +794,22 @@ public class ConsultantService {
                     .stream()
                     .filter(userDto -> "US".equalsIgnoreCase(userDto.getEntity()))
                     .filter(userDto -> userDto.getRoles().stream().anyMatch(roles -> roles.equalsIgnoreCase(role)))
+                    .filter(userDto -> userDto.getEmail() != null && !userDto.getEmail().isBlank())
                     .collect(Collectors.toMap(
                             UserDto::getUserName,
-                            UserDto::getEmail
+                            UserDto::getEmail,
+                            (first, ignored) -> first
                     ));
         }else{
             logger.info("Fetching Primary Super Admin data...");
             return userServiceClient.getAllUsers(null, null).getData()
                     .stream()
-                    .filter(userDto -> userDto.getIsPrimarySuperAdmin())
+                    .filter(userDto -> Boolean.TRUE.equals(userDto.getIsPrimarySuperAdmin()))
+                    .filter(userDto -> userDto.getEmail() != null && !userDto.getEmail().isBlank())
                     .collect(Collectors.toMap(
                             UserDto::getUserName,
-                            UserDto::getEmail
+                            UserDto::getEmail,
+                            (first, ignored) -> first
                     ));
         }
     }

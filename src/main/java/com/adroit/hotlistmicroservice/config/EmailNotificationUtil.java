@@ -1,14 +1,15 @@
 package com.adroit.hotlistmicroservice.config;
 
-import com.adroit.hotlistmicroservice.model.Consultant;
-import org.springframework.context.annotation.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 
 @Component
 public class EmailNotificationUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmailNotificationUtil.class);
 
     private final EmailService emailService;
 
@@ -17,7 +18,10 @@ public class EmailNotificationUtil {
     }
 
     public void send(String recipients, String subject, String emailBody) {
-
+        if (recipients == null || recipients.isBlank()) {
+            logger.warn("Skipping email '{}': empty recipient", subject);
+            return;
+        }
         emailService.sendHtmlEmail(recipients, subject, emailBody);
     }
     public String safeValue(String value){
@@ -41,16 +45,7 @@ public class EmailNotificationUtil {
                 + "</ul>"
                 + "Please review and take the necessary action.";
 
-        recipientEmails.entrySet().parallelStream().forEach(entry -> {
-            try {
-                String emailBody = buildMulyaTemplate(entry.getKey(), messageContent);
-                send(entry.getValue(), subject, emailBody);
-            } catch (Exception e) {
-                //If Any one/two mails fail also we can get success response
-                //logger.error("Failed to send email to {}: {}", entry.getValue(), e.getMessage());
-            }
-        });
-
+        sendToRecipients(recipientEmails, subject, messageContent);
     }
 
     public void sendConsultantApprovedEmail(
@@ -70,16 +65,7 @@ public class EmailNotificationUtil {
                 + "<p>This approval was completed by <strong>" + approvedBy + "</strong>.</p>"
                 + "<p>Please log in to the portal for further details.</p>";
 
-        recipientEmails.entrySet().parallelStream().forEach(entry -> {
-            try {
-                String emailBody = buildMulyaTemplate(entry.getKey(), messageContent);
-                send(entry.getValue(), subject, emailBody);
-            } catch (Exception e) {
-                //If Any one/two mails fail also we can get success response
-                //logger.error("Failed to send email to {}: {}", entry.getValue(), e.getMessage());
-            }
-        });
-
+        sendToRecipients(recipientEmails, subject, messageContent);
     }
     public void sendConsultantRejectedEmail(
             Map<String,String> recipientEmails, String consultantId, String consultantName,
@@ -98,16 +84,7 @@ public class EmailNotificationUtil {
                 + "<p>This approval was rejected by <strong>" + rejectedBy + "</strong>.</p>"
                 + "<p>Please log in to the portal for further details.</p>";
 
-        recipientEmails.entrySet().parallelStream().forEach(entry -> {
-            try {
-                String emailBody = buildMulyaTemplate(entry.getKey(), messageContent);
-                send(entry.getValue(), subject, emailBody);
-            } catch (Exception e) {
-                //If Any one/two mails fail also we can get success response
-                //logger.error("Failed to send email to {}: {}", entry.getValue(), e.getMessage());
-            }
-        });
-
+        sendToRecipients(recipientEmails, subject, messageContent);
     }
     public void notifyTeamForApprovedConsultant(
             Map<String, String> recipientEmails, String consultantId, String consultantName,
@@ -129,19 +106,30 @@ public class EmailNotificationUtil {
                 + "<p><strong>Next Step:</strong> Please start marketing this candidate profile to clients immediately.</p>"
                 + "<p>Login to the portal for full details.</p>";
 
-        recipientEmails.entrySet().parallelStream().forEach(entry -> {
-            try {
-                String emailBody = buildMulyaTemplate(entry.getKey(), messageContent);
-                send(entry.getValue(), subject, emailBody);
-            } catch (Exception e) {
-                //If Any one/two mails fail also we can get success response
-                //logger.error("Failed to send email to {}: {}", entry.getValue(), e.getMessage());
-            }
-        });
+        sendToRecipients(recipientEmails, subject, messageContent);
     }
 
 
 
+
+    private void sendToRecipients(Map<String, String> recipientEmails, String subject, String messageContent) {
+        if (recipientEmails == null || recipientEmails.isEmpty()) {
+            logger.warn("No recipients for email '{}'", subject);
+            return;
+        }
+        recipientEmails.forEach((name, email) -> {
+            if (email == null || email.isBlank()) {
+                logger.warn("Skipping email '{}' for {}: empty address", subject, name);
+                return;
+            }
+            try {
+                send(email, subject, buildMulyaTemplate(name, messageContent));
+                logger.info("Sent '{}' to {}", subject, email);
+            } catch (Exception e) {
+                logger.error("Failed to send '{}' to {}: {}", subject, email, e.getMessage(), e);
+            }
+        });
+    }
 
     // Building Template
     private String buildMulyaTemplate(String username, String messageContent) {
