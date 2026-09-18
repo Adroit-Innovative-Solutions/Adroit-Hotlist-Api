@@ -99,7 +99,8 @@ public class ConsultantSpecifications {
                          case "marketingVisa":
                          case "actualVisa":
                          case "approvalStatus":
-                             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)),value.toString().toLowerCase()+"%"));
+                             String searchValue = "%" + value.toString().trim().toLowerCase() + "%";
+                             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get(field)), searchValue));
                              break;
                          case "isAssignAll":
                          case "movedToHotlist":
