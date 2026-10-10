@@ -1,6 +1,7 @@
 package com.adroit.hotlistmicroservice.utils;
 
 import com.adroit.hotlistmicroservice.model.Consultant;
+import com.adroit.hotlistmicroservice.tenant.TenantContext;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.domain.Specification;
@@ -139,6 +140,7 @@ public class ConsultantSpecifications {
     }
     public static Specification<Consultant> recruiterSearch(String recruiterId, String keyword,Map<String,Object> filters,String statusFilter) {
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(isMovedToHotlist())
                 .and((root, query, cb) ->
                         cb.or(
@@ -152,6 +154,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> teamLeadSearch(String teamLeadId, String keyword,Map<String,Object> filters,String statusFilter) {
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(isMovedToHotlist())
                 .and((root, query, cb) ->
                         cb.or(
@@ -164,6 +167,7 @@ public class ConsultantSpecifications {
     }
     public static Specification<Consultant> salesExecutiveSearch(String salesExecutiveId,String keyword,Map<String,Object> filters,String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(isMovedToHotlist())
                 .and((root, query, criteriaBuilder) ->
                     criteriaBuilder.or(
@@ -180,6 +184,7 @@ public class ConsultantSpecifications {
     }
      public static Specification<Consultant> allConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
          return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                  .and(isMovedToHotlist())
                  .and(isOtherFullTime())
                  .and(isNotDirectRTR())
@@ -190,6 +195,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> allW2ConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(isMovedToHotlist())
                 .and(isW2Payroll())
                 .and(createSearchSpecification(keyword))
@@ -207,6 +213,7 @@ public class ConsultantSpecifications {
     }
     public static Specification<Consultant> allFullTimeConsultantsSearch(String keyword,Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(isMovedToHotlist())
                 .and(isFullTimePayroll())
                 .and(createSearchSpecification(keyword))
@@ -222,12 +229,19 @@ public class ConsultantSpecifications {
      public static  Specification<Consultant> isNotDeleted(){
         return ((root, query, criteriaBuilder) -> criteriaBuilder.isFalse(root.get("isDeleted")));
     }
+
+    public static Specification<Consultant> forCurrentTenant() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("tenantId"), TenantContext.getTenantId());
+    }
+
     public static Specification<Consultant> isMovedToHotlist(){
         return ((root, query, criteriaBuilder) ->
                 criteriaBuilder.isTrue(root.get("movedToHotlist")));
     }
     public static Specification<Consultant> yetToOnBoardConsultants(String keyword,Map<String,Object> filters,String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.or(criteriaBuilder.isFalse(root.get("movedToHotlist"))))
                 .and(createSearchSpecification(keyword))
@@ -237,6 +251,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> onHoldConsultants(String keyword, Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.notEqual(criteriaBuilder.lower(root.get("status")), "Active"))
                 .and((root, query, criteriaBuilder) ->
@@ -248,6 +263,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> activeConsultants(String keyword, Map<String,Object> filters, String statusFilter){
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.equal(criteriaBuilder.lower(root.get("status")), "Active"))
                 .and((root, query, criteriaBuilder) ->
@@ -268,6 +284,7 @@ public class ConsultantSpecifications {
 
     public static Specification<Consultant> getAllGuestHouseConsultants(String keyword, Map<String, Object> filters, String statusFilter) {
         return Specification.<Consultant>where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(isMovedToHotlist())
                 .and(isGuestHousePayroll())
                 .and(createSearchSpecification(keyword))

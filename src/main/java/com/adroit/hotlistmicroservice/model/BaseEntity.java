@@ -1,5 +1,6 @@
 package com.adroit.hotlistmicroservice.model;
 
+import com.adroit.hotlistmicroservice.tenant.TenantContext;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
@@ -34,11 +35,17 @@ public abstract class BaseEntity {
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
+    @Column(name = "tenant_id")
+    private String tenantId;
+
     @PrePersist
     protected void onCreate(){
         this.createdAt=LocalDateTime.now();
         this.updatedAt=LocalDateTime.now();
         this.isDeleted=false;
+        if (this.tenantId == null || this.tenantId.isBlank()) {
+            this.tenantId = TenantContext.getTenantId();
+        }
     }
     @PreUpdate
     protected void onUpdate(){

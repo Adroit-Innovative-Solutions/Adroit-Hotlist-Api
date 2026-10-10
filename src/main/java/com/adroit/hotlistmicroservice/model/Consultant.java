@@ -59,9 +59,20 @@ public class Consultant {
     @Column(nullable = false)
     private Boolean isDirectRtr = false;
 
+    @Column(name = "tenant_id")
+    private String tenantId;
+
     public Boolean getDirectRtr() {return isDirectRtr;}
 
     public void setDirectRtr(Boolean directRtr) {isDirectRtr = directRtr;}
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
 
     public boolean isAssignAll() {return isAssignAll;}
 

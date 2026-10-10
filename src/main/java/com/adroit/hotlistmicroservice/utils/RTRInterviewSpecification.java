@@ -2,6 +2,7 @@ package com.adroit.hotlistmicroservice.utils;
 
 import com.adroit.hotlistmicroservice.model.RTRInterview;
 import com.adroit.hotlistmicroservice.model.UserDetails;
+import com.adroit.hotlistmicroservice.tenant.TenantContext;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -188,6 +189,7 @@ public class RTRInterviewSpecification {
 
     public static Specification<RTRInterview> allInterviews(String keyword, Map<String, Object> filters, LocalDate fromDate, LocalDate toDate){
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword))
                 .and(createdAtDateFilter(fromDate, toDate));
@@ -200,6 +202,7 @@ public class RTRInterviewSpecification {
             LocalDate fromDate,
             LocalDate toDate){
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.equal(root.get("createdBy"), userId))
                 .and(createSearchSpecification(keyword))
@@ -215,6 +218,7 @@ public class RTRInterviewSpecification {
             LocalDate toDate) {
         return Specification
                 .where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) -> {
                     if (consultantIds == null || consultantIds.isEmpty()) {
                         return criteriaBuilder.disjunction();
@@ -234,6 +238,7 @@ public class RTRInterviewSpecification {
             LocalDate toDate) {
         return Specification
                 .where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) -> {
                     if (teamMemberIds == null || teamMemberIds.isEmpty()) {
                         return criteriaBuilder.disjunction();
@@ -251,12 +256,18 @@ public class RTRInterviewSpecification {
                 criteriaBuilder.isFalse(root.get("isDeleted"));
     }
 
+    private static Specification<RTRInterview> forCurrentTenant() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("tenantId"), TenantContext.getTenantId());
+    }
+
     public static Specification<RTRInterview> consultantInterviews(
             String consultantId,
             String keyword,
             Map<String, Object> filters) {
 
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.equal(root.get("consultantId"), consultantId)
                 )

@@ -13,6 +13,7 @@ import com.adroit.hotlistmicroservice.model.Consultant;
 import com.adroit.hotlistmicroservice.model.ConsultantDocument;
 import com.adroit.hotlistmicroservice.repo.ConsultantDocumentRepo;
 import com.adroit.hotlistmicroservice.repo.ConsultantRepo;
+import com.adroit.hotlistmicroservice.tenant.TenantContext;
 import jakarta.transaction.Transactional;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
@@ -201,7 +202,9 @@ public class ConsultantService {
 
     private Consultant saveConsultantWithDocuments(Consultant consultant, List<MultipartFile> resumes,
                                                    List<MultipartFile> documents) throws IOException {
-        // Save consultant first (without documents)
+        if (consultant.getTenantId() == null || consultant.getTenantId().isBlank()) {
+            consultant.setTenantId(TenantContext.getTenantId());
+        }
         Consultant savedConsultant = consultantRepo.save(consultant);
 
         // Initialize documents list if null

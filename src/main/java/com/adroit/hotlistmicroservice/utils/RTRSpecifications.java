@@ -2,6 +2,7 @@ package com.adroit.hotlistmicroservice.utils;
 
 import com.adroit.hotlistmicroservice.model.RateTermsConfirmation;
 import com.adroit.hotlistmicroservice.model.UserDetails;
+import com.adroit.hotlistmicroservice.tenant.TenantContext;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -101,6 +102,7 @@ public class RTRSpecifications {
     public static Specification<RateTermsConfirmation> allRTRs(String keyword, LocalDateTime fromDate, LocalDateTime toDate, Map<String,Object> filters){
 
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(createDateRangeSpecification(fromDate, toDate))
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword));
@@ -150,6 +152,7 @@ public class RTRSpecifications {
             Map<String,Object> filters){
 
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.equal(root.get("createdBy"), userId))
                 .and(createDateRangeSpecification(fromDate, toDate))
@@ -160,6 +163,7 @@ public class RTRSpecifications {
     public static Specification<RateTermsConfirmation> consultantRTRs(String consultantId,String keyword,Map<String,Object> filters){
 
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(((root, query, criteriaBuilder) ->
                         criteriaBuilder.or(
                                 criteriaBuilder.equal(root.get("consultantId"),consultantId)
@@ -173,6 +177,11 @@ public class RTRSpecifications {
             criteriaBuilder.isFalse(root.get("isDeleted"));
     }
 
+    private static Specification<RateTermsConfirmation> forCurrentTenant() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("tenantId"), TenantContext.getTenantId());
+    }
+
     public static Specification<RateTermsConfirmation> teamRtrs(
             List<String> consultantIds,
             String keyword,
@@ -181,6 +190,7 @@ public class RTRSpecifications {
             Map<String, Object> filters) {
         return Specification
                 .where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) -> {
                     if (consultantIds != null && !consultantIds.isEmpty()) {
                         return root.get("consultantId").in(consultantIds);
@@ -201,6 +211,7 @@ public class RTRSpecifications {
             Map<String, Object> filters) {
         return Specification
                 .where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) -> {
                     if (teamMemberIds == null || teamMemberIds.isEmpty()) {
                         return criteriaBuilder.disjunction();
@@ -220,6 +231,7 @@ public class RTRSpecifications {
             String date) {
         return Specification
                 .where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) -> {
                     if (teamMemberIds == null || teamMemberIds.isEmpty()) {
                         return criteriaBuilder.disjunction();
@@ -234,6 +246,7 @@ public class RTRSpecifications {
 
     public static Specification<RateTermsConfirmation> rtrsByDate(String keyword, Map<String, Object> filters, String date) {
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and(isCreatedOnDate(date))
                 .and(createFiltersSpecification(filters))
                 .and(createSearchSpecification(keyword));
@@ -241,6 +254,7 @@ public class RTRSpecifications {
 
     public static Specification<RateTermsConfirmation> salesRTRsByDate(String userId, String keyword, Map<String, Object> filters, String date) {
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) ->
                         criteriaBuilder.equal(root.get("createdBy"), userId))
                 .and(isCreatedOnDate(date))
@@ -250,6 +264,7 @@ public class RTRSpecifications {
 
     public static Specification<RateTermsConfirmation> teamRtrsByDate(List<String> consultantIds, String keyword, Map<String, Object> filters, String date) {
         return Specification.where(isNotDeleted())
+                .and(forCurrentTenant())
                 .and((root, query, criteriaBuilder) -> {
                     if (consultantIds != null && !consultantIds.isEmpty()) {
                         return root.get("consultantId").in(consultantIds);
